@@ -61,7 +61,7 @@ def main():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(
         static_image_mode=use_static_image_mode,
-        max_num_hands=1,
+        max_num_hands=2,
         min_detection_confidence=min_detection_confidence,
         min_tracking_confidence=min_tracking_confidence,
     )
@@ -140,7 +140,8 @@ def main():
                             pre_processed_point_history_list)
 
                 # Hand sign classification
-                hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+                sign_percantage = keypoint_classifier(pre_processed_landmark_list)
+                hand_sign_id = np.argmax(sign_percantage)
                 if hand_sign_id == 2:  # Point gesture
                     point_history.append(landmark_list[8])
                 else:
@@ -165,8 +166,9 @@ def main():
                     debug_image,
                     brect,
                     handedness,
-                    keypoint_classifier_labels[hand_sign_id],
+                    keypoint_classifier_labels,
                     point_history_classifier_labels[most_common_fg_id[0][0]],
+                    list(sign_percantage),
                 )
         else:
             point_history.append([0, 0])
@@ -491,15 +493,18 @@ def draw_bounding_rect(use_brect, image, brect):
     return image
 
 
-def draw_info_text(image, brect, handedness, hand_sign_text,
-                   finger_gesture_text):
+def draw_info_text(image, brect, handedness, hand_sign_list, finger_gesture_text, percentage_list):
     cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22),
                  (0, 0, 0), -1)
 
+    probability_rank = ranking_sign_probability(hand_sign_list, percentage_list)
+
     info_text = handedness.classification[0].label[0:]
-    if hand_sign_text != "":
-        info_text = info_text + ':' + hand_sign_text
+    if probability_rank[0][0] != None:
+        info_text = info_text[0] + ':' + probability_rank[0][0]
     cv.putText(image, info_text, (brect[0] + 5, brect[1] - 4),
+               cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+    cv.putText(image, probability_rank[0][1], (brect[2] - 44, brect[1] - 4),
                cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
 
     if finger_gesture_text != "":
@@ -509,8 +514,28 @@ def draw_info_text(image, brect, handedness, hand_sign_text,
                    cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2,
                    cv.LINE_AA)
 
+    cv.rectangle(image, (brect[0], brect[3]), (brect[2], brect[3] + 44),
+                 (63, 63, 63), -1)
+    
+    cv.putText(image, probability_rank[1][0], (brect[0] + 5, brect[3] + 16),
+               cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+    cv.putText(image, probability_rank[1][1], (brect[2] - 44, brect[3] + 16),
+               cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+    
+    cv.putText(image, probability_rank[2][0], (brect[0] + 5, brect[3] + 40),
+               cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+    cv.putText(image, probability_rank[2][1], (brect[2] - 44, brect[3] + 40),
+               cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+
     return image
 
+
+def ranking_sign_probability(hand_sign_list, percentage_list):
+    atribuition_list = dict(zip(hand_sign_list,percentage_list))
+    sorted_items = sorted(atribuition_list.items(), key=lambda item: item[1], reverse=True)
+
+    probability_rank = [[sign,f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]]
+    return probability_rank
 
 def draw_point_history(image, point_history):
     for index, point in enumerate(point_history):
