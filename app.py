@@ -159,6 +159,9 @@ def main():
                 most_common_fg_id = Counter(
                     finger_gesture_history).most_common()
 
+                # Getting the top 3 more probable signs
+                probability_rank = ranking_sign_probability(keypoint_classifier_labels, list(sign_percantage))
+
                 # Drawing part
                 debug_image = draw_bounding_rect(use_brect, debug_image, brect)
                 debug_image = draw_landmarks(debug_image, landmark_list)
@@ -166,9 +169,8 @@ def main():
                     debug_image,
                     brect,
                     handedness,
-                    keypoint_classifier_labels,
                     point_history_classifier_labels[most_common_fg_id[0][0]],
-                    list(sign_percantage),
+                    probability_rank,
                 )
         else:
             point_history.append([0, 0])
@@ -392,94 +394,73 @@ def draw_landmarks(image, landmark_point):
         cv.line(image, tuple(landmark_point[17]), tuple(landmark_point[0]),
                 (0, 0, 0), 6)
         cv.line(image, tuple(landmark_point[17]), tuple(landmark_point[0]),
-                (255, 255, 255), 2)
+                (20, 180, 240), 2)
 
     # Key Points
     for index, landmark in enumerate(landmark_point):
-        if index == 0:  # 手首1
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 0:  # Wrist 1
+            cv.circle(image, (landmark[0], landmark[1]), 7, (45, 0, 210), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
+        if index == 1:  # Wrist 2
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 1:  # 手首2
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 2:  # Thumb: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 2:  # 親指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 3:  # Thumb: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 3:  # 親指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 4:  # Thumb: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
+        if index == 5:  # Index finger: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 4:  # 親指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 5:  # 人差指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 6:  # Index finger: second joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 6:  # 人差指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 7:  # Index finger: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 7:  # 人差指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 8:  # Index finger: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
+        if index == 9:  # Middle finger: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 8:  # 人差指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 9:  # 中指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 10:  # Middle finger: second joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 10:  # 中指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 11:  # Middle finger: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 11:  # 中指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 12:  # Middle finger: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
+        if index == 13:  # Ring finger: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 12:  # 中指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 13:  # 薬指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 14:  # Ring finger: second joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 14:  # 薬指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 15:  # Ring finger: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 15:  # 薬指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 16:  # Ring finger: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
+        if index == 17:  # Little finger: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 16:  # 薬指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 17:  # 小指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 18:  # Little finger: second joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 18:  # 小指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 19:  # Little finger: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 19:  # 小指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 20:  # 小指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
+        if index == 20:  # Little finger: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
 
     return image
 
@@ -493,15 +474,13 @@ def draw_bounding_rect(use_brect, image, brect):
     return image
 
 
-def draw_info_text(image, brect, handedness, hand_sign_list, finger_gesture_text, percentage_list):
+def draw_info_text(image, brect, handedness, finger_gesture_text, probability_rank):
     cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22),
                  (0, 0, 0), -1)
 
-    probability_rank = ranking_sign_probability(hand_sign_list, percentage_list)
-
-    info_text = handedness.classification[0].label[0:]
+    info_text = handedness.classification[0].label[0]
     if probability_rank[0][0] != None:
-        info_text = info_text[0] + ':' + probability_rank[0][0]
+        info_text = info_text + ':' + probability_rank[0][0]
     cv.putText(image, info_text, (brect[0] + 5, brect[1] - 4),
                cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
     cv.putText(image, probability_rank[0][1], (brect[2] - 44, brect[1] - 4),
