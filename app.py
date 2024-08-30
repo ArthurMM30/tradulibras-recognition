@@ -15,7 +15,7 @@ import mediapipe as mp
 from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
-from repository import SignsDescriptionClient
+from repository.signsDescription import SignsDescriptionClient
 
 
 def get_args():
@@ -111,7 +111,8 @@ def main():
 
     #  ########################################################################
     mode = 0
-    number = -1
+    number = ""
+    record_on = False
 
     cm_timer = 0
     blank_timer = 0
@@ -128,7 +129,7 @@ def main():
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
-        number, new_mode = select_mode(key, mode, number)
+        number, new_mode, record_on = select_mode(key, mode, number, record_on)
 
         if new_mode != mode and (new_mode == 4 or new_mode == 5):
             phrase = []
@@ -180,7 +181,7 @@ def main():
                     debug_image, point_history[hand_side])
                 # Write to the dataset file ####################################################################
                 logging_csv(number, mode, pre_processed_landmark_list,
-                            pre_processed_point_history_list[hand_side])
+                            pre_processed_point_history_list[hand_side], record_on)
 
                 # Hand sign classification
                 sign_percantage = keypoint_classifier(pre_processed_landmark_list)
@@ -227,33 +228,33 @@ def main():
                         probability_rank,
                     )
 
-                # if CM != probability_rank[0][0]:
-                #     cm_timer = 0
-                #     has_a_new_word = False
+                if CM != probability_rank[0][0]:
+                    cm_timer = 0
+                    has_a_new_word = False
 
-                # CM = probability_rank[0][0]
-                # if 5 < cm_timer < 30 and not has_a_new_word:
-                #     result = repo.getSignByCMAndLocal(CM,location)
-                #     print("RESULT:" + str(result.get()))
+                CM = probability_rank[0][0]
+                if 15 < cm_timer  and not has_a_new_word:
+                    result = repo.getSignByCMAndLocal(CM,location)
+                    print("RESULT:" + str(result.get()))
 
-                #     if len(result) == 1:
-                #         word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
+                    if len(result) == 1:
+                        word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
 
-                #         if len(phrase) == 0 or phrase[-1] != word:
-                #             phrase.append(word)
-                #             has_a_new_word = True
+                        if len(phrase) == 0 or phrase[-1] != word:
+                            phrase.append(word)
+                            has_a_new_word = True
                     
-                #     elif len(result) > 1:
-                #         for trajectory_index in most_common_fg_id:
-                #             trajectory = point_history_classifier_labels[trajectory_index[0]]
-                #             result_filtered = result.filterSignBySense(trajectory)
-                #             print("RESULT FILTERED:" + str(result_filtered.get()) + "\nTRAJECTORY:" + trajectory)
-                #             if len(result_filtered) == 1:
-                #                 word = result_filtered.getFirstMotto() if language == "pt-br" else result_filtered.getFirstMottoEn()
-                #                 if len(phrase) == 0 or phrase[-1] != word:
-                #                     phrase.append(word)
-                #                     has_a_new_word = True
-                #                     break
+                    elif len(result) > 1:
+                        for trajectory_index in most_common_fg_id:
+                            trajectory = point_history_classifier_labels[trajectory_index[0]]
+                            result_filtered = result.filterSignBySense(trajectory)
+                            print("RESULT FILTERED:" + str(result_filtered.get()) + "\nTRAJECTORY:" + trajectory)
+                            if len(result_filtered) == 1:
+                                word = result_filtered.getFirstMotto() if language == "pt-br" else result_filtered.getFirstMottoEn()
+                                if len(phrase) == 0 or phrase[-1] != word:
+                                    phrase.append(word)
+                                    has_a_new_word = True
+                                    break
             
                 if cm_timer > 150:
                     CM = ""
@@ -275,7 +276,7 @@ def main():
 
         if mode !=6:
             debug_image = draw_point_history(debug_image, point_history)
-        debug_image = draw_info(debug_image, fps, mode, number, cm_timer, phrase)
+        debug_image = draw_info(debug_image, fps, mode, number, cm_timer, phrase, record_on)
 
         # Screen reflection #############################################################
         cv.imshow('Hand Gesture Recognition', debug_image)
@@ -284,33 +285,30 @@ def main():
     cv.destroyAllWindows()
 
 
-def select_mode(key, mode, number):
-    if mode != 2: number = -1
+def select_mode(key, mode, number, record_on):
+    if mode != 1 and mode != 2: number = ""
     if ord("0") <= key <= ord("9"):
-        number = key - 48
-        if mode == 2: number += 10
+        if len(number) == 2:
+            number = str(key - 48)
+        else:
+            number = number + str(key - 48)
     if key == ord("n"):
         mode = 0
-    if key == ord("k"):
+    if key == ord("k"):            # CM configuration mode
         mode = 1
     if key == ord("h"):
         mode = 2
     if key == ord("r"):
-        mode = 2
-        if number>=10:
-            number-= 10
-        else:
-            number+= 10
+        record_on = not record_on
     if key == ord("b"):             #to view the body
         mode = 3
-    if key == ord("p"):             
+    if key == ord("p"):            
         mode = 4
-    if key == ord("e"):             
+    if key == ord("e"):            
         mode = 5
-    if key == ord("x"):             
+    if key == ord("x"):            
         mode = 6
-    return number, mode
-
+    return number, mode, record_on
 
 def calc_bounding_rect(image, landmarks):
     image_width, image_height = image.shape[1], image.shape[0]
@@ -456,19 +454,19 @@ def pre_process_point_history(image, point_history):
     temp_point_history = copy.deepcopy(point_history)
 
     # Convert to relative coordinates
-    base_x, base_y, base_z = 0, 0, 0
+    base_x, base_y, base_zy, base_zx = 0, 0, 0, 0
     for index, point in enumerate(temp_point_history):
         if index == 0:
-            base_x, base_y, base_z = point[0], point[1], point[2]
+            base_x, base_y, base_zy, base_zx = point[0], point[1], point[2], point[3]
 
         temp_point_history[index][0] = (temp_point_history[index][0] -
                                         base_x) / image_width
         temp_point_history[index][1] = (temp_point_history[index][1] -
                                         base_y) / image_height
         temp_point_history[index][2] = (temp_point_history[index][2] -
-                                        base_z) / image_height
-        temp_point_history[index][3] = (temp_point_history[index][2] -
-                                        base_z) / image_height
+                                        base_zy) / image_height
+        temp_point_history[index][3] = (temp_point_history[index][3] -
+                                        base_zx) / image_height
 
     # Convert to a one-dimensional list
     temp_point_history = list(
@@ -477,15 +475,16 @@ def pre_process_point_history(image, point_history):
     return temp_point_history
 
 
-def logging_csv(number, mode, landmark_list, point_history_list):
+def logging_csv(number, mode, landmark_list, point_history_list, record_on):
+    number = int(number) if number != "" else 0
     if mode == 0:
         pass
-    if mode == 1 and (0 <= number <= 9):
+    if mode == 1 and (0 <= number <= 9) and record_on:
         csv_path = 'model/keypoint_classifier/keypoint.csv'
         with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *landmark_list])
-    if mode == 2 and (0 <= number <= 9):
+    if mode == 2 and (0 <= number <= 9) and record_on:
         csv_path = 'model/point_history_classifier/point_history.csv'
         with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
@@ -733,45 +732,48 @@ def draw_point_history(image, point_history):
 
     return image
 
-
-def draw_info(image, fps, mode, number, timer, phrase):
+def draw_info(image, fps, mode, number, timer, phrase, record_on):
     image_width, image_height = image.shape[1], image.shape[0]
-
+ 
     cv.putText(image, str(fps), (image_width//2 - 30, 30), cv.FONT_HERSHEY_SIMPLEX,
                1.0, (0, 0, 0), 4, cv.LINE_AA)
     cv.putText(image, str(fps), (image_width//2  - 30, 30), cv.FONT_HERSHEY_SIMPLEX,
                1.0, (255, 255, 255), 2, cv.LINE_AA)
-
+ 
     mode_string = ['Logging Key Point', 'Logging Point History']
+    if number == "":
+        number = "0"
+ 
     if 1 <= mode <= 2:
-        cv.putText(image, "MODE:" + mode_string[mode - 1], (image_width//2 - 100, 70),
+        active = " ON" if record_on else " OFF"
+        cv.putText(image, "MODE:" + mode_string[mode - 1] + active, (image_width//2 - 100, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2,
                    cv.LINE_AA)
-        cv.putText(image, "MODE:" + mode_string[mode - 1], (image_width//2 - 100, 70),
+        cv.putText(image, "MODE:" + mode_string[mode - 1] + active, (image_width//2 - 100, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
                    cv.LINE_AA)
-        if 0 <= number <= 9:
-            cv.putText(image, "NUM:" + str(number), (image_width//2 - 80, 90),
-                       cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2,
-                       cv.LINE_AA)
-            cv.putText(image, "NUM:" + str(number), (image_width//2 - 80, 90),
-                       cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
-                       cv.LINE_AA)
-            
+        if 0 <= int(number) <= 99:
+           
+            cv.putText(image, "K:" + number, (image.shape[1] - 250, image_height - 25),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 4,
+                    cv.LINE_AA)
+            cv.putText(image, "K:" + number, (image.shape[1] - 250, image_height - 25),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2,
+                    cv.LINE_AA)
+           
     if mode != 6:        
         cv.putText(image, "TIMER:" + str(timer), (10, image_height - 25), cv.FONT_HERSHEY_SIMPLEX,
             1.0, (0, 0, 0), 4, cv.LINE_AA)
         cv.putText(image, "TIMER:" + str(timer), (10, image_height - 25), cv.FONT_HERSHEY_SIMPLEX,
             1.0, (255, 255, 255), 2, cv.LINE_AA)
-
+ 
     phrase = [unidecode(word) for word in phrase]
     cv.putText(image, " ".join(phrase), (image_width//2 - 80, image_height - 25), cv.FONT_HERSHEY_SIMPLEX,
         1.0, (0, 0, 0), 3, cv.LINE_AA)
     cv.putText(image, " ".join(phrase), (image_width//2 - 80, image_height - 25), cv.FONT_HERSHEY_SIMPLEX,
         1.0, (255, 255, 255), 2, cv.LINE_AA)
-    
+   
     return image
-
 
 def draw_pose_landmarks(image, landmark_point, landmark_wrist, location, hand_side):
     cv.line(image, tuple(landmark_point[0]), tuple(landmark_point[1]),
