@@ -107,7 +107,7 @@ def main():
     pre_processed_point_history_list = {"L":[],"R":[]}
 
     # Finger gesture history ################################################
-    finger_gesture_history = {"L":deque(maxlen=history_length//2),"R":deque(maxlen=history_length//2)}
+    finger_gesture_history = {"L":deque(maxlen=history_length),"R":deque(maxlen=history_length)}
 
     #  ########################################################################
     mode = 0
@@ -205,6 +205,7 @@ def main():
                 if hand_side == "L":
                     most_common_fg_id = Counter(
                         finger_gesture_history[hand_side]).most_common()
+                    print(most_common_fg_id)
                 else:
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
 
