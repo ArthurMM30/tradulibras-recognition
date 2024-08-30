@@ -107,7 +107,7 @@ def main():
     pre_processed_point_history_list = {"L":[],"R":[]}
 
     # Finger gesture history ################################################
-    finger_gesture_history = {"L":deque(maxlen=history_length),"R":deque(maxlen=history_length)}
+    finger_gesture_history = {"L":deque(maxlen=history_length//4),"R":deque(maxlen=history_length)}
 
     #  ########################################################################
     mode = 0
