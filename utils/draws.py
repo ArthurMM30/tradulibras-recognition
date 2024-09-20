@@ -678,7 +678,13 @@ class DrawOnCamera:
         self.cv.line(
             image, tuple(landmark_point[13]), tuple(landmark_point[14]), (45, 0, 210), 2
         )
-
+        
+        print(landmark_point)
+        
+        self.cv.line(
+            image, tuple(landmark_point[15]), tuple(landmark_point[16]), (45, 0, 210), 2
+        )
+        
         for landmark in landmark_point[:10]:
             self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)

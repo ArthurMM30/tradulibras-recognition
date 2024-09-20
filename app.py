@@ -231,7 +231,7 @@ def main():
                     most_common_fg_id = Counter(
                         finger_gesture_history[hand_side]
                     ).most_common()
-                    print(most_common_fg_id)
+                    
                 else:
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
 
@@ -273,7 +273,7 @@ def main():
                 if 15 < cm_timer and not has_a_new_word:
                     result = repo.getSignByCMAndLocal(CM, location)
                     print("RESULT:" + str(result.get()))
-
+                                
                     if len(result) == 1:
                         word = (
                             result.getFirstMotto()
@@ -285,18 +285,15 @@ def main():
                             phrase.append(word)
                             has_a_new_word = True
 
+                
                     elif len(result) > 1:
                         for trajectory_index in most_common_fg_id:
                             trajectory = point_history_classifier_labels[
                                 trajectory_index[0]
                             ]
+                            
+                            print(trajectory)
                             result_filtered = result.filterSignBySense(trajectory)
-                            print(
-                                "RESULT FILTERED:"
-                                + str(result_filtered.get())
-                                + "\nTRAJECTORY:"
-                                + trajectory
-                            )
                             if len(result_filtered) == 1:
                                 word = (
                                     result_filtered.getFirstMotto()
@@ -307,7 +304,11 @@ def main():
                                     phrase.append(word)
                                     has_a_new_word = True
                                     break
-
+                    
+                        
+                        
+                        
+                    
                 if cm_timer > 150:
                     CM = ""
                     cm_timer = 0
@@ -374,10 +375,10 @@ def select_mode(key, mode, number, record_on):
 def identify_hand_area(point, hand_side, pose_landmark):
     location = ""
     if (
-        pose_landmark[1][0] < point[0] < pose_landmark[0][0]
-        and pose_landmark[0][1] < point[1] < pose_landmark[10][1]
+        (pose_landmark[1][0] < point[0] < pose_landmark[0][0]
+        and pose_landmark[0][1] < point[1] < pose_landmark[10][1]) 
     ):
-        location = "TESTA"
+        location = "TESTA"  
 
     elif (
         pose_landmark[1][0] < point[0] < pose_landmark[0][0]
@@ -399,12 +400,15 @@ def identify_hand_area(point, hand_side, pose_landmark):
         pose_landmark[5][0] < point[0] < pose_landmark[4][0]
         and pose_landmark[4][1] < point[1] < pose_landmark[8][1]
     ):
-        torso_side = "L" if point[0] < pose_landmark[13][0] else "R"
-        if torso_side == hand_side:
-            location = "TORSO IPSILATERAL"
-        else:
-            location = "TORSO CONTRALATERAL"
+        
+        side = "L" if point[0] < pose_landmark[13][0] else "R"
+        location = "IPSILATERAL" if side == hand_side else "CONTRALATERAL"
 
+        if pose_landmark[16][1] < point[1] < pose_landmark[8][1]:
+            location = "BARRIGA " + location
+        else:
+            location = "PEITORAL " + location
+        
     else:
         location = "NEUTRA"
 

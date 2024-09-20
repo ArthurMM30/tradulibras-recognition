@@ -55,7 +55,6 @@ class Calcs:
             landmark_y = min(int(landmark.y * image_height), image_height - 1)
 
             landmark_points.append([landmark_x, landmark_y])
-
         return landmark_points
 
 
@@ -68,6 +67,7 @@ class Calcs:
             (landmark_point[3][i] * 3) // 5 + (landmark_point[5][i] * 2) // 5
             for i in range(2)
         ]
+        
 
         eye_mean = [(landmark_point[0][i] + landmark_point[1][i]) // 2 for i in range(2)]
         head_wrist_mean = [
@@ -77,7 +77,10 @@ class Calcs:
             (landmark_point[4][i] + landmark_point[5][i]) // 2 for i in range(2)
         ]
         hip_mean = [(landmark_point[8][i] + landmark_point[9][i]) // 2 for i in range(2)]
-
+        torso_mean_left = [(landmark_point[4][i] + landmark_point[8][i]) // 2 for i in range(2)]
+        torso_mean_right = [(landmark_point[5][i] + landmark_point[9][i]) // 2 for i in range(2)]
+        
+        
         head_top = [head_wrist_mean[0], eye_mean[1] * 2 - head_wrist_mean[1]]
 
         head_top_left = [head_wrist_left[0], head_top[1]]
@@ -97,7 +100,9 @@ class Calcs:
             head_mean_right,
             head_wrist_mean,
             shoulder_mean,
-            hip_mean,
+            hip_mean, 
+            torso_mean_left,
+            torso_mean_right
         ]
 
         return new_external_landmarks + landmark_point[4:] + new_internal_landmarks
