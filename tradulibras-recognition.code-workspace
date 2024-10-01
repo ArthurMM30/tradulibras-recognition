@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "tradulibras-recognition",
+			"path": "."
+		},
+		{
+			"name": "repository",
+			"path": "../../../Downloads/repository"
+		}
+	],
+	"settings": {}
+}
