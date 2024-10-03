@@ -679,7 +679,7 @@ class DrawOnCamera:
             image, tuple(landmark_point[13]), tuple(landmark_point[14]), (45, 0, 210), 2
         )
         
-        print(landmark_point)
+        (landmark_point)
         
         self.cv.line(
             image, tuple(landmark_point[15]), tuple(landmark_point[16]), (45, 0, 210), 2

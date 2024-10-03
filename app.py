@@ -6,7 +6,7 @@ import argparse
 import itertools
 from collections import Counter
 from collections import deque
-
+import threading
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -14,6 +14,7 @@ import mediapipe as mp
 from utils import CvFpsCalc
 from utils import DrawOnCamera
 from utils import Calcs
+from utils import Talks
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 from repository.signsDescription import SignsDescriptionClient
@@ -270,45 +271,30 @@ def main():
                     has_a_new_word = False
 
                 CM = probability_rank[0][0]
-                if 15 < cm_timer and not has_a_new_word:
-                    result = repo.getSignByCMAndLocal(CM, location)
+                if 15 < cm_timer  and not has_a_new_word:
+                    result = repo.getSignByCMAndLocal(CM,location)
                     print("RESULT:" + str(result.get()))
-                                
+
                     if len(result) == 1:
-                        word = (
-                            result.getFirstMotto()
-                            if language == "pt-br"
-                            else result.getFirstMottoEn()
-                        )
+                        word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
 
                         if len(phrase) == 0 or phrase[-1] != word:
                             phrase.append(word)
                             has_a_new_word = True
-
-                
+                            threading.Thread(target=play_word_in_background, args=(word,)).start()
+                    
                     elif len(result) > 1:
                         for trajectory_index in most_common_fg_id:
-                            trajectory = point_history_classifier_labels[
-                                trajectory_index[0]
-                            ]
-                            
-                            print(trajectory)
+                            trajectory = point_history_classifier_labels[trajectory_index[0]]
                             result_filtered = result.filterSignBySense(trajectory)
                             if len(result_filtered) == 1:
-                                word = (
-                                    result_filtered.getFirstMotto()
-                                    if language == "pt-br"
-                                    else result_filtered.getFirstMottoEn()
-                                )
+                                word = result_filtered.getFirstMotto() if language == "pt-br" else result_filtered.getFirstMottoEn()
                                 if len(phrase) == 0 or phrase[-1] != word:
                                     phrase.append(word)
                                     has_a_new_word = True
+                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
                                     break
-                    
-                        
-                        
-                        
-                    
+            
                 if cm_timer > 150:
                     CM = ""
                     cm_timer = 0
@@ -342,6 +328,10 @@ def main():
 
     cap.release()
     cv.destroyAllWindows()
+
+def play_word_in_background(word):
+    talks = Talks()
+    talks.play(word)
 
 
 def select_mode(key, mode, number, record_on):
