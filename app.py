@@ -273,7 +273,6 @@ def main():
                 CM = probability_rank[0][0]
                 if 15 < cm_timer  and not has_a_new_word:
                     result = repo.getSignByCMAndLocal(CM,location)
-                    print("RESULT:" + str(result.get()))
 
                     if len(result) == 1:
                         word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
