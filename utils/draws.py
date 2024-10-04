@@ -462,7 +462,7 @@ class DrawOnCamera:
         return image
 
 
-    def draw_info(self,image, fps, mode, number, timer, phrase, record_on):
+    def draw_info(self,image, fps, mode, number, timer, word, record_on):
         image_width, image_height = image.shape[1], image.shape[0]
 
         self.cv.putText(
@@ -557,10 +557,10 @@ class DrawOnCamera:
                 self.cv.LINE_AA,
             )
 
-        phrase = [unidecode(word) for word in phrase]
+        draw_word = unidecode(word) 
         self.cv.putText(
             image,
-            " ".join(phrase),
+            draw_word,
             (image_width // 2 - 80, image_height - 25),
             self.cv.FONT_HERSHEY_SIMPLEX,
             1.0,
@@ -570,7 +570,7 @@ class DrawOnCamera:
         )
         self.cv.putText(
             image,
-            " ".join(phrase),
+            draw_word,
             (image_width // 2 - 80, image_height - 25),
             self.cv.FONT_HERSHEY_SIMPLEX,
             1.0,

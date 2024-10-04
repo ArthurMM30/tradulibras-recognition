@@ -11,3 +11,5 @@ class Talks:
             playsound("utils/audios/voce.mp3")
         elif(word == "amor"):
             playsound("utils/audios/amor.mp3")
+
+        

@@ -128,7 +128,7 @@ def main():
     cm_timer = 0
     blank_timer = 0
     CM = ""
-    phrase = []
+    draw_word = ""
     language = "pt-br"
 
     has_a_new_word = False
@@ -143,7 +143,7 @@ def main():
         number, new_mode, record_on = select_mode(key, mode, number, record_on)
 
         if new_mode != mode and (new_mode == 4 or new_mode == 5):
-            phrase = []
+            draw_word = ""
             language = "pt-br" if new_mode == 4 else "en"
 
         mode = new_mode
@@ -278,8 +278,8 @@ def main():
                     if len(result) == 1:
                         word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
 
-                        if len(phrase) == 0 or phrase[-1] != word:
-                            phrase.append(word)
+                        if draw_word == "" or draw_word != word:
+                            draw_word = word
                             has_a_new_word = True
                             threading.Thread(target=play_word_in_background, args=(word,)).start()
                     
@@ -289,8 +289,8 @@ def main():
                             result_filtered = result.filterSignBySense(trajectory)
                             if len(result_filtered) == 1:
                                 word = result_filtered.getFirstMotto() if language == "pt-br" else result_filtered.getFirstMottoEn()
-                                if len(phrase) == 0 or phrase[-1] != word:
-                                    phrase.append(word)
+                                if draw_word == "" or draw_word != word:
+                                    draw_word = word
                                     has_a_new_word = True
                                     threading.Thread(target=play_word_in_background, args=(word,)).start()
                                     break
@@ -299,7 +299,7 @@ def main():
                     CM = ""
                     cm_timer = 0
                     blank_timer = 0
-                    phrase = []
+                    draw_word = ""
 
             cm_timer += 1
             [
@@ -320,7 +320,7 @@ def main():
         if mode != 6:
             debug_image = draw.draw_point_history(debug_image, point_history)
         debug_image = draw.draw_info(
-            debug_image, fps, mode, number, cm_timer, phrase, record_on
+            debug_image, fps, mode, number, cm_timer, draw_word, record_on
         )
 
         # Screen reflection #############################################################
