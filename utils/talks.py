@@ -1,15 +1,17 @@
 from playsound import playsound
-
+from unidecode import unidecode 
+from gtts import gTTS
 class Talks:
     def __init__(self):
         pass
-
-    def play(self, word):
-        if(word == "eu"):
-            playsound("utils/audios/eu.mp3")
-        elif(word == "você"):
-            playsound("utils/audios/voce.mp3")
-        elif(word == "amor"):
-            playsound("utils/audios/amor.mp3")
+    
+    @staticmethod
+    def play(word, isSpelling = False):
+        if(isSpelling == True):
+            obj = gTTS(text=word, lang='pt-br', slow=False)
+            obj.save(f"utils/audios/{unidecode(word)}.mp3")
+            
+        playsound("utils/audios/"+unidecode(word)+".mp3")
+        
 
         

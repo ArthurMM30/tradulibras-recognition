@@ -329,15 +329,14 @@ def main():
     cv.destroyAllWindows()
 
 def play_word_in_background(word):
-    talks = Talks()
-    talks.play(word)
+    Talks.play(word)
 
 
 def select_mode(key, mode, number, record_on):
     if mode != 1 and mode != 2:
         number = ""
     if ord("0") <= key <= ord("9"):
-        if len(number) == 2:
+        if len(number) == 1:
             number = str(key - 48)
         else:
             number = number + str(key - 48)

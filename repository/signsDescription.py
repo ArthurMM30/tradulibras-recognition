@@ -7,6 +7,16 @@ class SignsDescriptionClient():
         self.dbs = self.client['TraduLibras']
         self.collection = self.dbs['signsDescription']
 
+    def getAllWords(self):
+        data_response = []
+        
+        query = {"spelling" : False}
+        projection = {"motto" : 1, "_id" : 0}
+        
+        for word in self.collection.find(query, projection):
+            data_response.append(word['motto'])
+        
+        return data_response
 
     def getSignByCM(self, data_request, index=0, is_dominant=True):
         data_response = []
