@@ -9,11 +9,9 @@ class SignsDescriptionClient():
 
     def getAllWords(self):
         data_response = []
-        
-        query = {"spelling" : False}
         projection = {"motto" : 1, "_id" : 0}
         
-        for word in self.collection.find(query, projection):
+        for word in self.collection.find(projection):
             data_response.append(word['motto'])
         
         return data_response

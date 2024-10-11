@@ -6,11 +6,7 @@ class Talks:
         pass
     
     @staticmethod
-    def play(word, isSpelling = False):
-        if(isSpelling == True):
-            obj = gTTS(text=word, lang='pt-br', slow=False)
-            obj.save(f"utils/audios/{unidecode(word)}.mp3")
-            
+    def play(word):            
         playsound("utils/audios/"+unidecode(word)+".mp3")
         
 
