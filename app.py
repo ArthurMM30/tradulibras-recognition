@@ -154,6 +154,16 @@ def main():
         hand_results = hands.process(image)
         pose_results = pose.process(image)
         image.flags.writeable = True
+        
+        hand_side_history = []
+
+        wrist_hand_points = {"L":None, "R":None}
+        if pose_results.pose_landmarks is not None:
+            pose_landmarks = pose_results.pose_landmarks
+
+            pose_landmark_list = calc_pose_landmark_list(debug_image, pose_landmarks)
+
+            pose_landmark_list = calc_new_pose_landmarks(pose_landmark_list)
 
         hand_side_history = []
         
@@ -177,6 +187,9 @@ def main():
                 brect = calcs.calc_bounding_rect(debug_image, hand_landmarks)
                 # Landmark calculation
                 landmark_list = calcs.calc_landmark_list(debug_image, hand_landmarks)
+
+                hand_side = handedness.classification[0].label[0]
+                hand_side_history.append(hand_side)
 
                 hand_side = handedness.classification[0].label[0]
                 hand_side_history.append(hand_side)
@@ -375,6 +388,83 @@ def ranking_sign_probability(hand_sign_list, percentage_list):
     probability_rank = [
         [sign, f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]
     ]
+    return probability_rank
+
+
+def calc_euclidian_distance(x1, x2):
+    return int(((x1[0] - x2[0]) ** 2 + (x1[1] - x2[1]) ** 2) ** (1/2))
+
+
+def calc_pose_landmark_list(image, landmarks):
+    image_width, image_height = image.shape[1], image.shape[0]
+    landmark_points = []
+
+    landmark_list = [landmarks.landmark[i] for i in range(25) 
+                     if i not in (0,1,2,4,5,7,8,15,16,17,18,19,20,21,22)] 
+    for _, landmark in enumerate(landmark_list):
+        landmark_x = min(int(landmark.x * image_width), image_width - 1)
+        landmark_y = min(int(landmark.y * image_height), image_height - 1)
+
+        landmark_points.append([landmark_x, landmark_y])
+
+    return landmark_points
+
+def calc_new_pose_landmarks(landmark_point):
+    head_wrist_left = [(landmark_point[2][i] * 3) // 5 + (landmark_point[4][i] * 2) // 5 for i in range(2)]
+    head_wrist_right = [(landmark_point[3][i] * 3) // 5 + (landmark_point[5][i] * 2) // 5 for i in range(2)]
+
+    eye_mean = [(landmark_point[0][i] + landmark_point[1][i]) // 2 for i in range(2)]
+    head_wrist_mean = [(head_wrist_left[i] + head_wrist_right[i]) // 2 for i in range(2)]
+    shoulder_mean = [(landmark_point[4][i] + landmark_point[5][i]) // 2 for i in range(2)]
+    hip_mean = [(landmark_point[8][i] + landmark_point[9][i]) // 2 for i in range(2)]
+
+    head_top = [head_wrist_mean[0],eye_mean[1] * 2 - head_wrist_mean[1]]
+
+    head_top_left = [head_wrist_left[0],head_top[1]]
+    head_top_right = [head_wrist_right[0],head_top[1]]
+
+    head_mean_left = [head_wrist_left[0],eye_mean[1]]
+    head_mean_right = [head_wrist_right[0],eye_mean[1]]
+
+    new_external_landmarks=[head_top_left, head_top_right, head_wrist_left, head_wrist_right]
+    new_internal_landmarks=[head_mean_left, head_mean_right, head_wrist_mean, shoulder_mean, hip_mean]
+
+    return new_external_landmarks + landmark_point[4:] + new_internal_landmarks
+
+def identify_hand_area(point, hand_side, pose_landmark):
+    location = ""
+    if pose_landmark[1][0] < point[0] < pose_landmark[0][0] and pose_landmark[0][1] < point[1] < pose_landmark[10][1]:
+        location = "TESTA"
+
+    elif pose_landmark[1][0] < point[0] < pose_landmark[0][0] and pose_landmark[10][1] < point[1] < pose_landmark[2][1]:
+        location = "BOCA"
+
+    elif pose_landmark[3][0] < point[0] < pose_landmark[2][0] and pose_landmark[2][1] < point[1] < pose_landmark[4][1]:
+        neck_side = "L" if point[0] < pose_landmark[12][0] else "R"
+        if neck_side == hand_side:
+            location = "PESCOCO IPSILATERAL"
+        else:
+            location = "PESCOCO CONTRALATERAL"
+        
+    elif pose_landmark[5][0] < point[0] < pose_landmark[4][0] and pose_landmark[4][1] < point[1] < pose_landmark[8][1]:
+        torso_side = "L" if point[0] < pose_landmark[13][0] else "R"
+        if torso_side == hand_side:
+            location = "TORSO IPSILATERAL"
+        else:
+            location = "TORSO CONTRALATERAL"
+
+    else:
+        location = "NEUTRA"
+    
+    return location
+
+
+
+def ranking_sign_probability(hand_sign_list, percentage_list):
+    atribuition_list = dict(zip(hand_sign_list,percentage_list))
+    sorted_items = sorted(atribuition_list.items(), key=lambda item: item[1], reverse=True)
+
+    probability_rank = [[sign,f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]]
     return probability_rank
 
 
