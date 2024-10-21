@@ -15,6 +15,7 @@ from utils import CvFpsCalc
 from utils import DrawOnCamera
 from utils import Calcs
 from utils import Talks
+from utils import ModeManager
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 from repository.signsDescription import SignsDescriptionClient
@@ -83,10 +84,11 @@ def main():
     )
 
     keypoint_classifier = KeyPointClassifier()
-
     point_history_classifier = PointHistoryClassifier()
 
     repo = SignsDescriptionClient()
+
+    mode_manager = ModeManager()
 
     # Read labels ###########################################################
     with open(
@@ -121,16 +123,11 @@ def main():
     }
 
     #  ########################################################################
-    mode = 0
-    number = ""
-    record_on = False
 
     cm_timer = 0
     blank_timer = 0
     CM = ""
     draw_word = ""
-    language = "pt-br"
-
     has_a_new_word = False
 
     while True:
@@ -140,13 +137,8 @@ def main():
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
-        number, new_mode, record_on = select_mode(key, mode, number, record_on)
 
-        if new_mode != mode and (new_mode == 4 or new_mode == 5):
-            draw_word = ""
-            language = "pt-br" if new_mode == 4 else "en"
-
-        mode = new_mode
+        mode_manager.alter_mode_by_key(key)
 
         # Camera capture #####################################################
         ret, image = cap.read()
@@ -196,11 +188,9 @@ def main():
                 )
                 # Write to the dataset file ####################################################################
                 logging_csv(
-                    number,
-                    mode,
+                    mode_manager,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list[hand_side],
-                    record_on,
                 )
 
                 # Hand sign classification
@@ -245,7 +235,8 @@ def main():
                 location = identify_hand_area(
                     landmark_list[5], hand_side, pose_landmark_list
                 )
-                if mode == 3:
+
+                if mode_manager.is_body_able():
                     debug_image = draw.draw_pose_landmarks(
                         debug_image,
                         pose_landmark_list,
@@ -254,7 +245,7 @@ def main():
                         hand_side,
                     )
 
-                if mode != 6:
+                if mode_manager.is_hand_able():
                     # Drawing part
                     debug_image = draw.draw_bounding_rect(use_brect, debug_image, brect)
                     debug_image = draw.draw_landmarks(debug_image, landmark_list)
@@ -275,7 +266,7 @@ def main():
                     result = repo.getSignByCMAndLocal(CM,location)
 
                     if len(result) == 1:
-                        word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
+                        word = result.getFirstMottoEn() if mode_manager.is_english_on() else result.getFirstMotto()
 
                         if draw_word == "" or draw_word != word:
                             draw_word = word
@@ -287,7 +278,7 @@ def main():
                             trajectory = point_history_classifier_labels[trajectory_index[0]]
                             result_filtered = result.filterSignBySense(trajectory)
                             if len(result_filtered) == 1:
-                                word = result_filtered.getFirstMotto() if language == "pt-br" else result_filtered.getFirstMottoEn()
+                                word = result_filtered.getFirstMottoEn() if mode_manager.is_english_on() else result_filtered.getFirstMotto()
                                 if draw_word == "" or draw_word != word:
                                     draw_word = word
                                     has_a_new_word = True
@@ -316,10 +307,10 @@ def main():
                 cm_timer = 0
                 blank_timer = 0
 
-        if mode != 6:
+        if mode_manager.is_hand_able():
             debug_image = draw.draw_point_history(debug_image, point_history)
         debug_image = draw.draw_info(
-            debug_image, fps, mode, number, cm_timer, draw_word, record_on
+            debug_image, fps, mode_manager, cm_timer, draw_word
         )
 
         # Screen reflection #############################################################
@@ -330,33 +321,6 @@ def main():
 
 def play_word_in_background(word):
     Talks.play(word)
-
-
-def select_mode(key, mode, number, record_on):
-    if mode != 1 and mode != 2:
-        number = ""
-    if ord("0") <= key <= ord("9"):
-        if len(number) == 1:
-            number = str(key - 48)
-        else:
-            number = number + str(key - 48)
-    if key == ord("n"):
-        mode = 0
-    if key == ord("k"):  # CM configuration mode
-        mode = 1
-    if key == ord("h"):
-        mode = 2
-    if key == ord("r"):
-        record_on = not record_on
-    if key == ord("b"):  # to view the body
-        mode = 3
-    if key == ord("p"):
-        mode = 4
-    if key == ord("e"):
-        mode = 5
-    if key == ord("x"):
-        mode = 6
-    return number, mode, record_on
 
 
 
@@ -470,20 +434,20 @@ def pre_process_point_history(image, point_history):
     return temp_point_history
 
 
-def logging_csv(number, mode, landmark_list, point_history_list, record_on):
-    number = int(number) if number != "" else 0
-    if mode == 0:
-        pass
-    if mode == 1 and (0 <= number <= 9) and record_on:
+def logging_csv(mode_manager, landmark_list, point_history_list):
+    mode, train_index = mode_manager.get_current_train_mode() #(Nothing, CM, Movement, Rotation)
+
+    if mode == 1:
         csv_path = "model/keypoint_classifier/keypoint.csv"
         with open(csv_path, "a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([number, *landmark_list])
-    if mode == 2 and (0 <= number <= 9) and record_on:
+            writer.writerow([train_index, *landmark_list])
+
+    if mode == 2:
         csv_path = "model/point_history_classifier/point_history.csv"
         with open(csv_path, "a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([number, *point_history_list])
+            writer.writerow([train_index, *point_history_list])
     return
 
 

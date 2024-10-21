@@ -323,21 +323,11 @@ class DrawOnCamera:
 
         info_text = hand_side
         if probability_rank[0][0] != None:
-            info_text = info_text + ":" + probability_rank[0][0]
+            info_text = f"{info_text}: {probability_rank[0][0]} - {probability_rank[0][1]}" 
         self.cv.putText(
             image,
             info_text,
             (brect[0] + 5, brect[1] - 4),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (255, 255, 255),
-            1,
-            self.cv.LINE_AA,
-        )
-        self.cv.putText(
-            image,
-            probability_rank[0][1],
-            (brect[2] - 44, brect[1] - 4),
             self.cv.FONT_HERSHEY_SIMPLEX,
             0.6,
             (255, 255, 255),
@@ -462,7 +452,7 @@ class DrawOnCamera:
         return image
 
 
-    def draw_info(self,image, fps, mode, number, timer, word, record_on):
+    def draw_info(self,image, fps, mode_manager, timer, word):
         image_width, image_height = image.shape[1], image.shape[0]
 
         self.cv.putText(
@@ -486,15 +476,12 @@ class DrawOnCamera:
             self.cv.LINE_AA,
         )
 
-        mode_string = ["Logging Key Point", "Logging Point History"]
-        if number == "":
-            number = "0"
+        if mode_manager.is_train_mode():
+            active = " ON" if mode_manager.is_record_on() else " OFF"
 
-        if 1 <= mode <= 2:
-            active = " ON" if record_on else " OFF"
             self.cv.putText(
                 image,
-                "MODE:" + mode_string[mode - 1] + active,
+                "MODE: " + mode_manager.get_train_text() + active,
                 (image_width // 2 - 100, 70),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 0.6,
@@ -504,7 +491,7 @@ class DrawOnCamera:
             )
             self.cv.putText(
                 image,
-                "MODE:" + mode_string[mode - 1] + active,
+                "MODE: " + mode_manager.get_train_text() + active,
                 (image_width // 2 - 100, 70),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 0.6,
@@ -512,30 +499,30 @@ class DrawOnCamera:
                 1,
                 self.cv.LINE_AA,
             )
-            if 0 <= int(number) <= 99:
 
-                self.cv.putText(
-                    image,
-                    "K:" + number,
-                    (image.shape[1] - 250, image_height - 25),
-                    self.cv.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (0, 0, 0),
-                    4,
-                    self.cv.LINE_AA,
-                )
-                self.cv.putText(
-                    image,
-                    "K:" + number,
-                    (image.shape[1] - 250, image_height - 25),
-                    self.cv.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (255, 255, 255),
-                    2,
-                    self.cv.LINE_AA,
-                )
 
-        if mode != 6:
+            self.cv.putText(
+                image,
+                "K:" + str(mode_manager.get_train_index()),
+                (image.shape[1] - 250, image_height - 25),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 0, 0),
+                4,
+                self.cv.LINE_AA,
+            )
+            self.cv.putText(
+                image,
+                "K:" + str(mode_manager.get_train_index()),
+                (image.shape[1] - 250, image_height - 25),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                2,
+                self.cv.LINE_AA,
+            )
+
+        if mode_manager.is_hand_able():
             self.cv.putText(
                 image,
                 "TIMER:" + str(timer),
