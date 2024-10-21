@@ -1,0 +1,11 @@
+pymongo
+tensorflow
+unidecode
+numpy
+seaborn
+pandas
+mediapipe
+opencv-python
+matplotlib
+scikit-learn
+playsound
