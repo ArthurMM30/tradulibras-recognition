@@ -126,7 +126,7 @@ def main():
 
     cm_timer = 0
     blank_timer = 0
-    CM = ""
+    last_movement = ""
     draw_word = ""
     has_a_new_word = False
 
@@ -270,36 +270,41 @@ def main():
                         probability_rank,
                     )
 
-                if CM != probability_rank[0][0]:
+                if last_movement != most_common_fg_id[0][0]:
+                    print(most_common_fg_id[0][0])
                     cm_timer = 0
                     has_a_new_word = False
 
-                CM = probability_rank[0][0]
-                if 15 < cm_timer  and not has_a_new_word:
-                    result = repo.getSignByCMAndLocal(CM,location)
-
-                    if len(result) == 1:
-                        word = result.getFirstMottoEn() if mode_manager.is_english_on() else result.getFirstMotto()
-
-                        if draw_word == "" or draw_word != word:
-                            draw_word = word
-                            has_a_new_word = True
-                            threading.Thread(target=play_word_in_background, args=(word,)).start()
+                last_movement = most_common_fg_id[0][0]
+                if mode_manager.is_spelling_on():
                     
-                    elif len(result) > 1:
-                        for trajectory_index in most_common_fg_id:
-                            trajectory = point_history_classifier_labels[trajectory_index[0]]
-                            result_filtered = result.filterSignBySense(trajectory)
-                            if len(result_filtered) == 1:
-                                word = result_filtered.getFirstMottoEn() if mode_manager.is_english_on() else result_filtered.getFirstMotto()
-                                if draw_word == "" or draw_word != word:
-                                    draw_word = word
-                                    has_a_new_word = True
-                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
-                                    break
+                    pass
+                else:
+                    if 15 < cm_timer and not has_a_new_word:
+                        result = repo.getSignByCMAndLocal(probability_rank[0][0],location)
+                        print(probability_rank[0][0],location, len(result))
+                        if len(result) == 1:
+                            word = result.getFirstMottoEn() if mode_manager.is_english_on() else result.getFirstMotto()
+
+                            if draw_word == "" or draw_word != word:
+                                draw_word = word
+                                has_a_new_word = True
+                                threading.Thread(target=play_word_in_background, args=(word,)).start()
+                        
+                        elif len(result) > 1:
+                            for trajectory_index in most_common_fg_id:
+                                trajectory = point_history_classifier_labels[trajectory_index[0]]
+                                result_filtered = result.filterSignBySense(trajectory)
+                                if len(result_filtered) == 1:
+                                    word = result_filtered.getFirstMottoEn() if mode_manager.is_english_on() else result_filtered.getFirstMotto()
+                                    if draw_word == "" or draw_word != word:
+                                        draw_word = word
+                                        has_a_new_word = True
+                                        threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                        break
             
                 if cm_timer > 150:
-                    CM = ""
+                    last_movement = ""
                     cm_timer = 0
                     blank_timer = 0
                     draw_word = ""
@@ -316,7 +321,7 @@ def main():
 
             blank_timer += 1
             if blank_timer == 150:
-                CM = ""
+                last_movement = ""
                 cm_timer = 0
                 blank_timer = 0
 
