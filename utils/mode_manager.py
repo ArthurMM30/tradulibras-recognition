@@ -2,9 +2,10 @@ class ModeManager:
     def __init__(self) -> None:
         self.mode = 0       # (Train Nothing, Train CM, Train History, Train Rotation)
         self.view_mode = 1  # (Show nothing, Show hands, Show hands and body)
+        self.train_index = 0
         self.record_on = False 
         self.english_on = False
-        self.train_index = 0
+        self.spelling_on = False
     
     def alter_mode_by_key(self, key):
         if ord("0") <= key <= ord("9"): # Number pictor to training
@@ -25,6 +26,8 @@ class ModeManager:
             self.view_mode %= 3
         if key == ord("e"):     # Language Toggle
             self.english_on = not self.english_on
+        if key == ord("s"):     # Spelling Toggle
+            self.spelling_on = not self.spelling_on
 
 
     # Train Options
@@ -70,4 +73,10 @@ class ModeManager:
 
     def is_record_on(self):
         return self.record_on
+
+
+    # Spelling options
+
+    def is_spelling_on(self):
+        return self.spelling_on
         
