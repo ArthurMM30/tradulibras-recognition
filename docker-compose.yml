@@ -1,7 +1,7 @@
 services:
   mongo1:
     build: ./docker/mongo1
-    container_name: mongodb
+    container_name: tradulibras-mongo
     restart: always
     environment:
       - MONGO_INITDB_DATABASE=${DB_MONGODB}
@@ -28,7 +28,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: "172.16.238.0/24"
+        - subnet: "172.16.239.0/24"
 
 volumes:
   mongo1_data:
