@@ -25,7 +25,6 @@ class SignsDescriptionClient:
         self,
         data_request_cm,
         data_request_local,
-        data_request_rotation,
         index=0,
         is_dominant=True,
     ):
@@ -33,13 +32,8 @@ class SignsDescriptionClient:
         hand = "dominant_hand" if is_dominant else "auxiliar_hand"
         cm_query = {f"phonology.{str(index)}.{hand}.CM": data_request_cm}
         local_query = {f"phonology.{str(index)}.{hand}.final_local": data_request_local}
-        rotation_query = {
-            f"phonology.{str(index)}.{hand}.rotation": data_request_rotation
-        }
 
-        for sign in self.collection.find(
-            {"$and": [cm_query, local_query, rotation_query]}
-        ):
+        for sign in self.collection.find({"$and": [cm_query, local_query]}):
             data_response.append(sign)
 
         return SignsDescriptionEntity(data_response)
@@ -70,6 +64,17 @@ class SignsDescriptionEntity(object):
 
         for sign in self.data:
             if sign["phonology"][index][hand]["sense"] == data_request:
+                data_response.append(sign)
+
+        return SignsDescriptionEntity(data_response)
+
+    def filterSignByRotation(self, data_request, index=0, is_dominant=True):
+        data_response = []
+
+        hand = "dominant_hand" if is_dominant else "auxiliar_hand"
+
+        for sign in self.data:
+            if sign["phonology"][index][hand]["rotation"] == data_request:
                 data_response.append(sign)
 
         return SignsDescriptionEntity(data_response)
