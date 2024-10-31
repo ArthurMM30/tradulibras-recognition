@@ -130,7 +130,10 @@ def main():
     CM = ""
     draw_word = ""
     language = "pt-br"
-
+    index = 0
+    
+    old_word = ""
+    
     has_a_new_word = False
 
     while True:
@@ -271,28 +274,37 @@ def main():
                     has_a_new_word = False
 
                 CM = probability_rank[0][0]
-                if 15 < cm_timer  and not has_a_new_word:
-                    result = repo.getSignByCMAndLocal(CM,location)
+                if 15 < cm_timer  and not has_a_new_word :
+                   
+                    for trajectory_index in most_common_fg_id:
+                        trajectory = point_history_classifier_labels[trajectory_index[0]]
+                        print(CM, location, trajectory, index)
+                        result = repo.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, index)    
+                        print(result.data)
+                        if len(result) == 1:
+                            old_word = result.getFirstMotto()
+                            if(len(result.data[0]["phonology"]) == index+1):
+                                index = 0
+                                word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
 
-                    if len(result) == 1:
-                        word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
-
-                        if draw_word == "" or draw_word != word:
-                            draw_word = word
-                            has_a_new_word = True
-                            threading.Thread(target=play_word_in_background, args=(word,)).start()
-                    
-                    elif len(result) > 1:
-                        for trajectory_index in most_common_fg_id:
-                            trajectory = point_history_classifier_labels[trajectory_index[0]]
-                            result_filtered = result.filterSignBySense(trajectory)
-                            if len(result_filtered) == 1:
-                                word = result_filtered.getFirstMotto() if language == "pt-br" else result_filtered.getFirstMottoEn()
                                 if draw_word == "" or draw_word != word:
                                     draw_word = word
                                     has_a_new_word = True
                                     threading.Thread(target=play_word_in_background, args=(word,)).start()
-                                    break
+                            else:
+                                index+=1
+                        elif len(result) == 0 and index > 0:
+                            result = repo.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                            if len(result) == 1:
+                                word_retry = result.getFirstMotto()
+                                if old_word != word_retry:
+                                    index = 0
+                                    if len(result.data[0]["phonology"]) == 1:
+                                        word = result.getFirstMotto() if language == "pt-br" else result.getFirstMottoEn()
+                                        if draw_word == "" or draw_word != word:
+                                            draw_word = word
+                                            has_a_new_word = True
+                                            threading.Thread(target=play_word_in_background, args=(word,)).start()  
             
                 if cm_timer > 150:
                     CM = ""
@@ -398,7 +410,7 @@ def identify_hand_area(point, hand_side, pose_landmark):
             location = "PEITORAL " + location
         
     else:
-        location = "NEUTRA"
+        location = "NEUTRO"
 
     return location
 

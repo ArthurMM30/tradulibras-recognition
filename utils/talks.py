@@ -6,7 +6,8 @@ class Talks:
         pass
     
     @staticmethod
-    def play(word):            
+    def play(word):    
+                
         playsound("utils/audios/"+unidecode(word)+".mp3")
         
 
