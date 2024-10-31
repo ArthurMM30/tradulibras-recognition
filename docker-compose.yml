@@ -1,37 +1,31 @@
 services:
   mongo1:
-    build: ./docker/mongo1
+    build: ./docker/mongo
     container_name: tradulibras-mongo
     restart: always
     environment:
       - MONGO_INITDB_DATABASE=${DB_MONGODB}
     volumes:
-      - mongo1_data:/data/db
-      - mongo1_config:/data/configdb
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
     ports:
       - ${DB_MONGODB_PORT:-27017}:27017
     networks:
       - secretary-network
     mem_limit: 2G
     memswap_limit: 4G
-    command: mongod --config /etc/mongo/mongod.conf
+    command: mongod
     cpus: 2
     healthcheck:
-      test: |
-        mongosh --quiet --eval "rs.status()" || mongosh --quiet --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo1:27017'}]})"
+      test: "mongosh --quiet --eval \"rs.status()\""
       interval: 5s
       timeout: 30s
-      start_period: 0s
       retries: 30
+
 networks:
   secretary-network:
-    ipam:
-      driver: default
-      config:
-        - subnet: "172.16.239.0/24"
+    driver: bridge
 
 volumes:
-  mongo1_data:
-    driver: local
-  mongo1_config:
-    driver: local
+  mongo_data:
+  mongo_config:
