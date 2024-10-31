@@ -21,6 +21,7 @@ class ModeManager:
             self.mode = 2
         if key == ord("r"):     # Record toggle
             self.record_on = not self.record_on
+            return "r"
         if key == ord("b"):     # Able Body
             self.view_mode += 1
             self.view_mode %= 3
@@ -28,7 +29,9 @@ class ModeManager:
             self.english_on = not self.english_on
         if key == ord("s"):     # Spelling Toggle
             self.spelling_on = not self.spelling_on
-
+            return "s"
+        return False
+        
 
     # Train Options
 
@@ -43,8 +46,8 @@ class ModeManager:
 
         return mode_string[self.mode]
     
-    def get_current_train_mode(self):
-        if not self.record_on:
+    def get_current_train_mode(self, command):
+        if not self.record_on and not command == "r":
             return 0, None
         
 
