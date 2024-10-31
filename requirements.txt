@@ -4,6 +4,7 @@ unidecode
 numpy
 seaborn
 pandas
+pygame
 mediapipe
 opencv-python
 matplotlib

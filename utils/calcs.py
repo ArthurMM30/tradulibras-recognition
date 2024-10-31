@@ -107,3 +107,44 @@ class Calcs:
 
         return new_external_landmarks + landmark_point[4:] + new_internal_landmarks
 
+    def identify_hand_area(self, point, hand_side, pose_landmark):
+        location = ""
+        if (
+            (pose_landmark[1][0] < point[0] < pose_landmark[0][0]
+            and pose_landmark[0][1] < point[1] < pose_landmark[10][1]) 
+        ):
+            location = "TESTA"  
+
+        elif (
+            pose_landmark[1][0] < point[0] < pose_landmark[0][0]
+            and pose_landmark[10][1] < point[1] < pose_landmark[2][1]
+        ):
+            location = "BOCA"
+
+        elif (
+            pose_landmark[3][0] < point[0] < pose_landmark[2][0]
+            and pose_landmark[2][1] < point[1] < pose_landmark[4][1]
+        ):
+            neck_side = "L" if point[0] < pose_landmark[12][0] else "R"
+            if neck_side == hand_side:
+                location = "PESCOCO IPSILATERAL"
+            else:
+                location = "PESCOCO CONTRALATERAL"
+
+        elif (
+            pose_landmark[5][0] < point[0] < pose_landmark[4][0]
+            and pose_landmark[4][1] < point[1] < pose_landmark[8][1]
+        ):
+            
+            side = "L" if point[0] < pose_landmark[13][0] else "R"
+            location = "IPSILATERAL" if side == hand_side else "CONTRALATERAL"
+
+            if pose_landmark[16][1] < point[1] < pose_landmark[8][1]:
+                location = "BARRIGA " + location
+            else:
+                location = "PEITORAL " + location
+            
+        else:
+            location = "NEUTRA"
+
+        return location
