@@ -8,7 +8,6 @@ from collections import Counter
 from collections import deque
 import threading
 import cv2 as cv
-import numpy as np
 import mediapipe as mp
 
 from utils import CvFpsCalc
@@ -63,7 +62,6 @@ def main():
 
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
-
     args = get_args()
 
     cap_device = args.device
@@ -95,7 +93,6 @@ def main():
         min_tracking_confidence=min_tracking_confidence,
     )
 
-
     # Read labels ###########################################################
     with open(
         "model/keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
@@ -112,7 +109,6 @@ def main():
             row[0] for row in point_history_classifier_labels
         ]
 
-
     history_length = 16
     point_history = {
         "L": deque(maxlen=history_length),
@@ -127,7 +123,6 @@ def main():
 
     word = ""
 
-
     while True:
         fps = cvFpsCalc.get()
 
@@ -135,7 +130,7 @@ def main():
         if key == 27:  # ESC
             break
 
-        received_command = mode_manager.alter_mode_by_key(key) 
+        received_command = mode_manager.alter_mode_by_key(key)
         if received_command == "s":
             spelled_word = word
             word = ""
@@ -153,13 +148,17 @@ def main():
         hand_results = hands.process(image)
         pose_results = pose.process(image)
         image.flags.writeable = True
-        
-        hand_side_history = []      # ######################################################### que isso?
-        
+
+        hand_side_history = (
+            []
+        )  # ######################################################### que isso?
+
         wrist_hand_points = {"L": None, "R": None}
         if pose_results.pose_landmarks is not None:
             pose_landmarks = pose_results.pose_landmarks
-            pose_landmark_list = calcs.calc_pose_landmark_list(debug_image, pose_landmarks)
+            pose_landmark_list = calcs.calc_pose_landmark_list(
+                debug_image, pose_landmarks
+            )
             pose_landmark_list = calcs.calc_new_pose_landmarks(pose_landmark_list)
 
         #  ####################################################################
@@ -186,14 +185,18 @@ def main():
                     mode_manager,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list[hand_side],
-                    received_command
+                    received_command,
                 )
 
                 # Hand sign classification
                 sign_percantage = keypoint_classifier(pre_processed_landmark_list)
 
-                y_hand_axis_size = calcs.calc_euclidian_distance(landmark_list[0], landmark_list[17])
-                x_hand_axis_size = calcs.calc_euclidian_distance(landmark_list[5], landmark_list[17])
+                y_hand_axis_size = calcs.calc_euclidian_distance(
+                    landmark_list[0], landmark_list[17]
+                )
+                x_hand_axis_size = calcs.calc_euclidian_distance(
+                    landmark_list[5], landmark_list[17]
+                )
 
                 point_history[hand_side].append(
                     landmark_list[0] + [y_hand_axis_size] + [x_hand_axis_size]
@@ -214,7 +217,7 @@ def main():
                     most_common_fg_id = Counter(
                         finger_gesture_history[hand_side]
                     ).most_common()
-                    
+
                 else:
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
 
@@ -250,9 +253,10 @@ def main():
                         hand_side,
                     )
 
-                if timer_manager.check_if_movement_updated(most_common_fg_id[0][0]) or timer_manager.check_if_CM_updated(probability_rank[0][0]):
+                if timer_manager.check_if_movement_updated(
+                    most_common_fg_id[0][0]
+                ) or timer_manager.check_if_CM_updated(probability_rank[0][0]):
                     timer_manager.reset_timer()
-
 
                 if mode_manager.is_spelling_on():
                     if 13 < timer_manager.get_timer() and timer_manager.is_able():
@@ -333,15 +337,19 @@ def main():
     cv.destroyAllWindows()
 
 
-def play_word_in_background(word, isSpelling = False):
+def play_word_in_background(word, isSpelling=False):
     Talks.play(word, isSpelling)
 
 
 def ranking_sign_probability(hand_sign_list, percentage_list):
-    atribuition_list = dict(zip(hand_sign_list,percentage_list))
-    sorted_items = sorted(atribuition_list.items(), key=lambda item: item[1], reverse=True)
+    atribuition_list = dict(zip(hand_sign_list, percentage_list))
+    sorted_items = sorted(
+        atribuition_list.items(), key=lambda item: item[1], reverse=True
+    )
 
-    probability_rank = [[sign,f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]]
+    probability_rank = [
+        [sign, f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]
+    ]
     return probability_rank
 
 
@@ -400,10 +408,15 @@ def pre_process_point_history(image, point_history):
 
     return temp_point_history
 
+
 cm_list = []
+
+
 def logging_csv(mode_manager, landmark_list, point_history_list, received_command):
     global cm_list
-    mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
+    mode, train_index = mode_manager.get_current_train_mode(
+        received_command
+    )  # (Nothing, CM, Movement, Rotation)
 
     if mode == 1:
         cm_list.append([train_index, *landmark_list])
