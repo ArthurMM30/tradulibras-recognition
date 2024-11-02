@@ -145,6 +145,6 @@ class Calcs:
                 location = "PEITORAL " + location
             
         else:
-            location = "NEUTRA"
+            location = "NEUTRO"
 
         return location
