@@ -241,9 +241,10 @@ def main():
 
                 # Getting the top 3 more probable signs
                 probability_rank = ranking_sign_probability(
-                    keypoint_classifier_labels, list(sign_percantage)
+                    keypoint_classifier_labels, list(sign_percantage), CM
                 )
-
+                
+    
                 wrist_hand_points[hand_side] = landmark_list[0]
                 location = identify_hand_area(
                     landmark_list[5], hand_side, pose_landmark_list
@@ -268,19 +269,19 @@ def main():
                         point_history_classifier_labels[most_common_fg_id[0][0]],
                         probability_rank,
                     )
-
+                
+        
                 if CM != probability_rank[0][0]:
                     cm_timer = 0
                     has_a_new_word = False
 
                 CM = probability_rank[0][0]
                 if 15 < cm_timer  and not has_a_new_word :
-                   
+                  
                     for trajectory_index in most_common_fg_id:
                         trajectory = point_history_classifier_labels[trajectory_index[0]]
-                        print(CM, location, trajectory, index)
-                        result = repo.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, index)    
-                        print(result.data)
+                       
+                        result = repo.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, index)   
                         if len(result) == 1:
                             old_word = result.getFirstMotto()
                             if(len(result.data[0]["phonology"]) == index+1):
@@ -414,11 +415,15 @@ def identify_hand_area(point, hand_side, pose_landmark):
 
     return location
 
-def ranking_sign_probability(hand_sign_list, percentage_list):
+def ranking_sign_probability(hand_sign_list, percentage_list, CM):
     atribuition_list = dict(zip(hand_sign_list, percentage_list))
+    print(f"Teste COM A CM: {CM}")
+    print(f"Teste1 {atribuition_list}")
     sorted_items = sorted(
         atribuition_list.items(), key=lambda item: item[1], reverse=True
     )
+    
+    print(f"Teste2 {sorted_items}")
 
     probability_rank = [
         [sign, f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]
