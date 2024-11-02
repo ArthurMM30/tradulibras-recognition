@@ -5,6 +5,7 @@ class TimerManager:
         self.last_CM = ""
         self.last_movement = ""
         self.able = True
+        self.index = 0
 
     # def check_if_CM_updated(self, CM):
 
@@ -28,6 +29,9 @@ class TimerManager:
     
     def get_blank_timer(self):
         return self.timer
+    
+    def get_index(self):
+        return self.index
 
 
     def increase_timer(self):
@@ -46,3 +50,5 @@ class TimerManager:
     def enable(self):
         self.able = False
     
+    def set_index(self, index):
+        self.index = index

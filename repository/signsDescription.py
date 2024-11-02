@@ -9,9 +9,7 @@ class SignsDescriptionClient():
 
     def getAllWords(self):
         data_response = []
-        projection = {"motto" : 1, "_id" : 0}
-        
-        for word in self.collection.find(projection):
+        for word in self.collection.find():
             data_response.append(word['motto'])
         
         return data_response
@@ -26,7 +24,7 @@ class SignsDescriptionClient():
 
         return SignsDescriptionEntity(data_response)
 
-    def getSignByCMAndLocal(self, data_request_cm, data_request_local, index=0, is_dominant=True):
+    def getSignByCMAndLocalAndTrajectory(self, data_request_cm, data_request_local, trajectory, index=0, is_dominant=True):
         data_response = []
         neutro = data_request_local.split(" ")[0] + " NEUTRO"
         
@@ -39,8 +37,11 @@ class SignsDescriptionClient():
                 {f"phonology.{str(index)}.{hand}.final_local": neutro}
             ]
         }
+        
+        trajectory_query = {f"phonology.{str(index)}.{hand}.sense":trajectory} 
+        
 
-        for sign in self.collection.find({"$and":[cm_query, local_query]}):
+        for sign in self.collection.find({"$and":[cm_query, local_query, trajectory_query]}):
             data_response.append(sign)
 
         return SignsDescriptionEntity(data_response)

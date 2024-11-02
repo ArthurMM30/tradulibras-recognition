@@ -266,53 +266,45 @@ def main():
                             timer_manager.enable()
 
                 else:
-                    # SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
-                    if received_command == "s":  # reconheceu quando acabou a soletragem
-                        threading.Thread(
-                            target=play_word_in_background,
-                            args=(spelled_word.lower(), True),
-                        ).start()
-                    if 1 < timer_manager.get_timer() and timer_manager.is_able():
-                        result = repo_sign.getSignByCMAndLocal(
-                            probability_rank[0][0], location
-                        )
-                        print(probability_rank[0][0], location, len(result))
+                    #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
+                    if received_command == "s": #reconheceu quando acabou a soletragem
+                        threading.Thread(target=play_word_in_background, args=(spelled_word.lower(), True)).start()
+                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
 
-                        if len(result) == 1:
-                            word = (
-                                result.getFirstMottoEn()
-                                if mode_manager.is_english_on()
-                                else result.getFirstMotto()
-                            )
+                        CM = probability_rank[0][0]
+                   
+                        for trajectory_index in most_common_fg_id:
+                            print("AAAAAAAAAAAAAAAAAAAAA")
+                            trajectory = point_history_classifier_labels[trajectory_index[0]]
+                            print(CM, location, trajectory, timer_manager.get_index())
+                            result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
+                            print(result.data)
+                            if len(result) == 1:
+                                old_word = result.getFirstMotto()
+                                if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
+                                    timer_manager.set_index(0)
+                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
 
-                            # if draw_word == "" or draw_word != word:
-                            # draw_word = word
-                            timer_manager.enable()
-                            threading.Thread(
-                                target=play_word_in_background, args=(word,)
-                            ).start()
-
-                        elif len(result) > 1:
-                            for trajectory_index in most_common_fg_id:
-                                trajectory = point_history_classifier_labels[
-                                    trajectory_index[0]
-                                ]
-                                result_filtered = result.filterSignBySense(trajectory)
-                                if len(result_filtered) == 1:
-                                    word = (
-                                        result_filtered.getFirstMottoEn()
-                                        if mode_manager.is_english_on()
-                                        else result_filtered.getFirstMotto()
-                                    )
                                     # if draw_word == "" or draw_word != word:
-                                    # draw_word = word
-                                    timer_manager.enable()
+                                        # draw_word = word
+                                        # has_a_new_word = True
+                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                else:
+                                    timer_manager.set_index(timer_manager.get_index() + 1)
 
-                                    threading.Thread(
-                                        target=play_word_in_background, args=(word,)
-                                    ).start()
-                                    break
-
+                            elif len(result) == 0 and timer_manager.get_index() > 0:
+                                result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                                if len(result) == 1:
+                                    word_retry = result.getFirstMotto()
+                                    if old_word != word_retry:
+                                        timer_manager.set_index(0)
+                                        if len(result.data[0]["phonology"]) == 1:
+                                            word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                            # if draw_word == "" or draw_word != word:
+                                                # draw_word = word
+                                                # has_a_new_word = True
+                                            threading.Thread(target=play_word_in_background, args=(word,)).start()  
+            
                 if timer_manager.get_timer() > 150:
                     timer_manager.reset_timer()
 
