@@ -220,7 +220,9 @@ def main():
 
                 else:
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
-
+                
+                
+                
                 # Getting the top 3 more probable signs
                 probability_rank = ranking_sign_probability(
                     keypoint_classifier_labels, list(sign_percantage)
@@ -253,9 +255,7 @@ def main():
                         hand_side,
                     )
 
-                if timer_manager.check_if_movement_updated(
-                    most_common_fg_id[0][0]
-                ) or timer_manager.check_if_CM_updated(probability_rank[0][0]):
+                if timer_manager.check_if_CM_updated(probability_rank[0][0], hand_side):
                     timer_manager.reset_timer()
 
                 if mode_manager.is_spelling_on():
@@ -274,36 +274,66 @@ def main():
                         CM = probability_rank[0][0]
                    
                         for trajectory_index in most_common_fg_id:
-                            print("AAAAAAAAAAAAAAAAAAAAA")
+                            
                             trajectory = point_history_classifier_labels[trajectory_index[0]]
-                            print(CM, location, trajectory, timer_manager.get_index())
-                            result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
-                            print(result.data)
-                            if len(result) == 1:
-                                old_word = result.getFirstMotto()
-                                if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
+                            isDominant = hand_side == "R"
+                            
+                            if(timer_manager.get_save_result_hand() != {} and timer_manager.get_save_result_hand()["side"] != hand_side):
+                                print("CAIU AQUI 4")
+                                hand_temp = timer_manager.get_save_result_hand()
+                                print(F"TESTE 1: {hand_temp["CM"]} / {hand_temp["sense"]} / {hand_temp["final_local"]}")
+                                print(F"TESTE 2: {CM} / {trajectory} / {location}")
+                                if(hand_temp["CM"] == CM and hand_temp["sense"] == trajectory and hand_temp["final_local"] == location):
+                                    print("CAIU AQUI 5")
+                                    word = hand_temp["motto"]
+                                    print(f"palavra: {word}")
+                                    timer_manager.set_save_result_hand({})
+                                    timer_manager.enable()
                                     timer_manager.set_index(0)
-                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-
-                                    # if draw_word == "" or draw_word != word:
-                                        # draw_word = word
-                                        # has_a_new_word = True
                                     threading.Thread(target=play_word_in_background, args=(word,)).start()
-                                else:
-                                    timer_manager.set_index(timer_manager.get_index() + 1)
-
-                            elif len(result) == 0 and timer_manager.get_index() > 0:
-                                result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                            else:    
+                                print(f"params pesquisa banco: {CM} / {location} / {trajectory} / {timer_manager.get_index()} / {isDominant}")                                
+                                result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index(), isDominant)    
                                 if len(result) == 1:
-                                    word_retry = result.getFirstMotto()
-                                    if old_word != word_retry:
-                                        timer_manager.set_index(0)
-                                        if len(result.data[0]["phonology"]) == 1:
-                                            word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                            # if draw_word == "" or draw_word != word:
-                                                # draw_word = word
-                                                # has_a_new_word = True
-                                            threading.Thread(target=play_word_in_background, args=(word,)).start()  
+                                    print(result.data)
+                                    old_word = result.getFirstMotto()
+                                    if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
+                                        if(isDominant):
+                                            auxiliar_hand = result.data[0]["phonology"][timer_manager.get_index()]["auxiliar_hand"]
+                                            if(auxiliar_hand != None):
+                                                print("CAIU AQUI 2")
+                                                auxiliar_hand["side"] = hand_side
+                                                auxiliar_hand["motto"] = result.data[0]["motto"]
+                                                timer_manager.set_save_result_hand(auxiliar_hand)
+                                            else:
+                                                timer_manager.set_index(0)
+                                                word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                timer_manager.enable()
+                                                threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                        else:
+                                            dominant_hand = result.data[0]["phonology"][timer_manager.get_index()]["dominant_hand"]
+                                            if(dominant_hand != None):
+                                                print("CAIU AQUI 3")
+                                                dominant_hand["side"] = hand_side
+                                                dominant_hand["motto"] = result.data[0]["motto"]
+                                                timer_manager.set_save_result_hand(dominant_hand)
+                                            else:
+                                                timer_manager.set_index(0)
+                                                word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                timer_manager.enable()
+                                                threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                    else:
+                                        print("CAIU AQUI")
+                                        timer_manager.set_index(timer_manager.get_index() + 1)
+                                elif len(result) == 0 and timer_manager.get_index() > 0:
+                                    result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                                    if len(result) == 1:
+                                        word_retry = result.getFirstMotto()
+                                        if old_word != word_retry:
+                                            timer_manager.set_index(0)
+                                            if len(result.data[0]["phonology"]) == 1:
+                                                word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                threading.Thread(target=play_word_in_background, args=(word,)).start()  
             
                 if timer_manager.get_timer() > 150:
                     timer_manager.reset_timer()
@@ -349,7 +379,7 @@ def ranking_sign_probability(hand_sign_list, percentage_list):
 
     probability_rank = [
         [sign, f"{percentage*100:.1f}"] for sign, percentage in sorted_items[:3]
-    ]
+    ]  
     return probability_rank
 
 

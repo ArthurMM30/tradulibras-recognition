@@ -11,7 +11,6 @@ class Talks:
     
     @staticmethod
     def play(word, isSpelling):
-        print("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
         pygame.mixer.init()
 
         
@@ -22,7 +21,6 @@ class Talks:
             pygame.mixer.music.play()
         else:
             word_path = f"utils/audios/spelling.mp3"
-            print("CCCCCCCCCCCCCCCCCCCCC")
             criarAudio = gTTS(text=word, lang='pt-br', slow=False)
             criarAudio.save(word_path)
             time.sleep(0.1) 
