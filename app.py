@@ -15,9 +15,12 @@ from utils import CvFpsCalc
 from utils import DrawOnCamera
 from utils import Calcs
 from utils import Talks
+from utils import ModeManager
+from utils import TimerManager
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 from repository.signsDescription import SignsDescriptionClient
+from repository.letterDescription import LetterDescriptionClient
 
 
 def get_args():
@@ -47,7 +50,20 @@ def get_args():
 
 
 def main():
-    # Argument parsing #################################################################
+    keypoint_classifier = KeyPointClassifier()
+    point_history_classifier = PointHistoryClassifier()
+
+    repo_sign = SignsDescriptionClient()
+    repo_letter = LetterDescriptionClient()
+
+    mode_manager = ModeManager()
+    timer_manager = TimerManager()
+    draw = DrawOnCamera(cv)
+    calcs = Calcs(cv)
+
+    cvFpsCalc = CvFpsCalc(buffer_len=10)
+
+
     args = get_args()
 
     cap_device = args.device
@@ -58,9 +74,6 @@ def main():
     min_detection_confidence = args.min_detection_confidence
     min_tracking_confidence = args.min_tracking_confidence
 
-    use_brect = True
-
-    # Camera preparation ###############################################################
     cap = cv.VideoCapture(cap_device)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
@@ -82,18 +95,13 @@ def main():
         min_tracking_confidence=min_tracking_confidence,
     )
 
-    keypoint_classifier = KeyPointClassifier()
-
-    point_history_classifier = PointHistoryClassifier()
-
-    repo = SignsDescriptionClient()
-
     # Read labels ###########################################################
     with open(
         "model/keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
     ) as f:
         keypoint_classifier_labels = csv.reader(f)
         keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
+
     with open(
         "model/point_history_classifier/point_history_classifier_label.csv",
         encoding="utf-8-sig",
@@ -103,10 +111,7 @@ def main():
             row[0] for row in point_history_classifier_labels
         ]
 
-    # FPS Measurement ########################################################
-    cvFpsCalc = CvFpsCalc(buffer_len=10)
 
-    # Coordinate history #################################################################
     history_length = 16
     point_history = {
         "L": deque(maxlen=history_length),
@@ -114,27 +119,14 @@ def main():
     }
     pre_processed_point_history_list = {"L": [], "R": []}
 
-    # Finger gesture history ################################################
     finger_gesture_history = {
         "L": deque(maxlen=history_length // 4),
         "R": deque(maxlen=history_length),
     }
 
-    #  ########################################################################
-    mode = 0
-    number = ""
-    record_on = False
+    word = ""
 
-    cm_timer = 0
-    blank_timer = 0
-    CM = ""
-    draw_word = ""
-    language = "pt-br"
-    index = 0
-    
-    old_word = ""
-    
-    has_a_new_word = False
+
 
     while True:
         fps = cvFpsCalc.get()
@@ -143,15 +135,12 @@ def main():
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
-        number, new_mode, record_on = select_mode(key, mode, number, record_on)
 
-        if new_mode != mode and (new_mode == 4 or new_mode == 5):
-            draw_word = ""
-            language = "pt-br" if new_mode == 4 else "en"
-
-        mode = new_mode
-
-        # Camera capture #####################################################
+        received_command = mode_manager.alter_mode_by_key(key) 
+        if received_command == "s":
+            spelled_word = word
+            word = ""
+            
         ret, image = cap.read()
         if not ret:
             break
@@ -167,16 +156,14 @@ def main():
         image.flags.writeable = True
 
         hand_side_history = []
-        
+
         draw = DrawOnCamera(cv)
         calcs = Calcs(cv)
 
         wrist_hand_points = {"L": None, "R": None}
         if pose_results.pose_landmarks is not None:
             pose_landmarks = pose_results.pose_landmarks
-
             pose_landmark_list = calcs.calc_pose_landmark_list(debug_image, pose_landmarks)
-
             pose_landmark_list = calcs.calc_new_pose_landmarks(pose_landmark_list)
 
         #  ####################################################################
@@ -184,8 +171,6 @@ def main():
             for hand_landmarks, handedness in zip(
                 hand_results.multi_hand_landmarks, hand_results.multi_handedness
             ):
-                # Bounding box calculation
-                brect = calcs.calc_bounding_rect(debug_image, hand_landmarks)
                 # Landmark calculation
                 landmark_list = calcs.calc_landmark_list(debug_image, hand_landmarks)
 
@@ -199,25 +184,24 @@ def main():
                 )
                 # Write to the dataset file ####################################################################
                 logging_csv(
-                    number,
-                    mode,
+                    mode_manager,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list[hand_side],
-                    record_on,
+                    received_command
                 )
 
                 # Hand sign classification
                 sign_percantage = keypoint_classifier(pre_processed_landmark_list)
 
-                y_da_mao_size = [
+                y_hand_axis_size = [
                     calcs.calc_euclidian_distance(landmark_list[0], landmark_list[17])
                 ]
-                x_da_mao_size = [
+                x_hand_axis_size = [
                     calcs.calc_euclidian_distance(landmark_list[5], landmark_list[17])
                 ]
 
                 point_history[hand_side].append(
-                    landmark_list[0] + y_da_mao_size + x_da_mao_size
+                    landmark_list[0] + y_hand_axis_size + x_hand_axis_size
                 )
 
                 # Finger gesture classification
@@ -235,7 +219,6 @@ def main():
                     most_common_fg_id = Counter(
                         finger_gesture_history[hand_side]
                     ).most_common()
-                    
                 else:
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
 
@@ -248,18 +231,11 @@ def main():
                 location = identify_hand_area(
                     landmark_list[5], hand_side, pose_landmark_list
                 )
-                if mode == 3:
-                    debug_image = draw.draw_pose_landmarks(
-                        debug_image,
-                        pose_landmark_list,
-                        wrist_hand_points,
-                        location,
-                        hand_side,
-                    )
 
-                if mode != 6:
-                    # Drawing part
-                    debug_image = draw.draw_bounding_rect(use_brect, debug_image, brect)
+                if mode_manager.is_hand_able():
+                    brect = calcs.calc_bounding_rect(debug_image, hand_landmarks)
+
+                    debug_image = draw.draw_bounding_rect(debug_image, brect)
                     debug_image = draw.draw_landmarks(debug_image, landmark_list)
                     debug_image = draw.draw_info_text(
                         debug_image,
@@ -283,17 +259,43 @@ def main():
 
 
                 if mode_manager.is_spelling_on():
-                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
+                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
                         result = repo_letter.getLetterByCM(probability_rank[0][0])
                         if len(result) == 1:
-                            word += result.getFirstLetter()
-                            timer_manager.enable()
+                            if result.validateSense("REPOUSO",0):
+                                word += result.getFirstLetter()
+                                timer_manager.enable()
+                            else:
+                                for trajectory_index in most_common_fg_id:
+                                    trajectory = point_history_classifier_labels[trajectory_index[0]]
+                                    # print("Traj",trajectory)
+                                    result_validation = result.validateSense(trajectory, timer_manager.get_spelling_index())
+                                    # print(result_validation)
+                                    if result_validation:
+                                        # print("Sense:", len(result.data[0]["sense"]))
+                                        # print("Index:", timer_manager.get_spelling_index()+1)
+                                        if len(result.data[0]["sense"]) == timer_manager.get_spelling_index()+1:
+                                            word += result.getFirstLetter()
+                                            timer_manager.enable()
+                                            timer_manager.set_spelling_index(0)
+                                            # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                                        else:
+                                            timer_manager.set_spelling_index(timer_manager.get_spelling_index() + 1)
+                                            # print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+                                    # else:
+                                    #     print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+                                    #     timer_manager.set_spelling_index(0)
+                                    elif not result_validation and timer_manager.get_spelling_index() > 0:
+                                        if result.validateSense("REPOUSO",0):
+                                            word += result.getFirstLetter()
+                                            timer_manager.enable()
+                                            timer_manager.set_spelling_index(0)
 
                 else:
                     #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
                     if received_command == "s": #reconheceu quando acabou a soletragem
                         threading.Thread(target=play_word_in_background, args=(spelled_word.lower(), True)).start()
-                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
+                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
 
                         CM = probability_rank[0][0]
                    
@@ -329,13 +331,10 @@ def main():
                                                 # has_a_new_word = True
                                             threading.Thread(target=play_word_in_background, args=(word,)).start()  
             
-                if cm_timer > 150:
-                    CM = ""
-                    cm_timer = 0
-                    blank_timer = 0
-                    draw_word = ""
+                if timer_manager.get_timer() > 150:
+                    timer_manager.reset_timer()
 
-            cm_timer += 1
+            timer_manager.increase_timer()
             [
                 point_history[side].append([0, 0, 0, 0])
                 for side in ("L", "R")
@@ -345,17 +344,17 @@ def main():
             point_history["L"].append([0, 0, 0, 0])
             point_history["R"].append([0, 0, 0, 0])
 
-            blank_timer += 1
-            if blank_timer == 150:
-                CM = ""
-                cm_timer = 0
-                blank_timer = 0
+            if timer_manager.get_blank_timer() == 150:
+                # draw_word = ""
+                timer_manager.reset()
 
-        if mode != 6:
+            timer_manager.increase_blank_timer()
+
+        if mode_manager.is_hand_able():
             debug_image = draw.draw_point_history(debug_image, point_history)
-        debug_image = draw.draw_info(
-            debug_image, fps, mode, number, cm_timer, draw_word, record_on
-        )
+            debug_image = draw.draw_info(
+                debug_image, fps, mode_manager, timer_manager.get_timer(), word
+            )
 
         # Screen reflection #############################################################
         cv.imshow("Hand Gesture Recognition", debug_image)
@@ -363,8 +362,8 @@ def main():
     cap.release()
     cv.destroyAllWindows()
 
-def play_word_in_background(word):
-    Talks.play(word)
+def play_word_in_background(word, isSpelling = False):
+    Talks.play(word, isSpelling)
 
 
 def select_mode(key, mode, number, record_on):
@@ -505,21 +504,36 @@ def pre_process_point_history(image, point_history):
     return temp_point_history
 
 
-def logging_csv(number, mode, landmark_list, point_history_list, record_on):
-    number = int(number) if number != "" else 0
-    if mode == 0:
-        pass
-    if mode == 1 and (0 <= number <= 9) and record_on:
-        csv_path = "model/keypoint_classifier/keypoint.csv"
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([number, *landmark_list])
-    if mode == 2 and (0 <= number <= 9) and record_on:
-        csv_path = "model/point_history_classifier/point_history.csv"
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([number, *point_history_list])
+cm_list = []
+mov_list = []
+def logging_csv(mode_manager, landmark_list, point_history_list, received_command):
+    global cm_list
+    global mov_list
+    mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
+
+    if mode == 1:
+        cm_list.append([train_index, *landmark_list])
+        if received_command == "r":
+            csv_path = "model/keypoint_classifier/keypoint.csv"
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.writer(f)
+                for cm in cm_list:
+                    writer.writerow(cm)
+            cm_list = []
+
+    if mode == 2:
+        mov_list.append([train_index, *point_history_list])
+        if received_command == "r":
+            csv_path = "model/point_history_classifier/point_history.csv"
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.writer(f)
+                for mov in mov_list:
+                    writer.writerow(mov)
+
+                writer.writerow([train_index, *point_history_list])
+            mov_list = []
     return
+
 
 
 if __name__ == "__main__":
