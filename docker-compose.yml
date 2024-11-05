@@ -1,0 +1,31 @@
+services:
+  mongo1:
+    build: ./docker/mongo
+    container_name: tradulibras-mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=${DB_MONGODB}
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    ports:
+      - ${DB_MONGODB_PORT:-27017}:27017
+    networks:
+      - secretary-network
+    mem_limit: 2G
+    memswap_limit: 4G
+    command: mongod
+    cpus: 2
+    healthcheck:
+      test: "mongosh --quiet --eval \"rs.status()\""
+      interval: 5s
+      timeout: 30s
+      retries: 30
+
+networks:
+  secretary-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  mongo_config:
