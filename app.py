@@ -255,22 +255,48 @@ def main():
 
 
                 if mode_manager.is_spelling_on():
-                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
+
+                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
                         result = repo_letter.getLetterByCM(probability_rank[0][0])
                         if len(result) == 1:
-                            word += result.getFirstLetter()
-                            timer_manager.enable()
+                            if result.validateSense("REPOUSO",0):
+                                word += result.getFirstLetter()
+                                timer_manager.enable()
+                            else:
+                                for trajectory_index in most_common_fg_id:
+                                    trajectory = point_history_classifier_labels[trajectory_index[0]]
+                                    print("Traj",trajectory)
+                                    result_validation = result.validateSense(trajectory, timer_manager.get_spelling_index())
+                                    print(result_validation)
+                                    if result_validation:
+                                        print("Sense:", len(result.data[0]["sense"]))
+                                        print("Index:", timer_manager.get_spelling_index()+1)
+                                        if len(result.data[0]["sense"]) == timer_manager.get_spelling_index()+1:
+                                            word += result.getFirstLetter()
+                                            timer_manager.enable()
+                                            timer_manager.set_spelling_index(0)
+                                            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                                        else:
+                                            timer_manager.set_spelling_index(timer_manager.get_spelling_index() + 1)
+                                            print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+                                    # else:
+                                    #     print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+                                    #     timer_manager.set_spelling_index(0)
+                                    elif not result_validation and timer_manager.get_spelling_index() > 0:
+                                        if result.validateSense("REPOUSO",0):
+                                            word += result.getFirstLetter()
+                                            timer_manager.enable()
+                                            timer_manager.set_spelling_index(0)
 
                 else:
                     #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
                     if received_command == "s": #reconheceu quando acabou a soletragem
                         threading.Thread(target=play_word_in_background, args=(spelled_word.lower(), True)).start()
-                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
+                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
 
                         CM = probability_rank[0][0]
                    
                         for trajectory_index in most_common_fg_id:
-                            print("AAAAAAAAAAAAAAAAAAAAA")
                             trajectory = point_history_classifier_labels[trajectory_index[0]]
                             print(CM, location, trajectory, timer_manager.get_index())
                             result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
@@ -401,8 +427,10 @@ def pre_process_point_history(image, point_history):
     return temp_point_history
 
 cm_list = []
+mov_list = []
 def logging_csv(mode_manager, landmark_list, point_history_list, received_command):
     global cm_list
+    global mov_list
     mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
 
     if mode == 1:
@@ -416,10 +444,16 @@ def logging_csv(mode_manager, landmark_list, point_history_list, received_comman
             cm_list = []
 
     if mode == 2:
-        csv_path = "model/point_history_classifier/point_history.csv"
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([train_index, *point_history_list])
+        mov_list.append([train_index, *point_history_list])
+        if received_command == "r":
+            csv_path = "model/point_history_classifier/point_history.csv"
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.writer(f)
+                for mov in mov_list:
+                    writer.writerow(mov)
+
+                writer.writerow([train_index, *point_history_list])
+            mov_list = []
     return
 
 

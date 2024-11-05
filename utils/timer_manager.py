@@ -6,6 +6,7 @@ class TimerManager:
         self.last_movement = ""
         self.able = True
         self.index = 0
+        self.spelling_index = 0
 
     # def check_if_CM_updated(self, CM):
 
@@ -32,6 +33,9 @@ class TimerManager:
     
     def get_index(self):
         return self.index
+    
+    def get_spelling_index(self):
+        return self.spelling_index
 
 
     def increase_timer(self):
@@ -52,3 +56,6 @@ class TimerManager:
     
     def set_index(self, index):
         self.index = index
+    
+    def set_spelling_index(self, spelling_index):
+        self.spelling_index = spelling_index
