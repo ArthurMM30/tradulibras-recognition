@@ -19,6 +19,8 @@ class ModeManager:
             self.mode = 1
         if key == ord("h"):     # History point configuration mode
             self.mode = 2
+        if key == ord("f"):    # Rotation configuration mode
+            self.mode = 3
         if key == ord("r"):     # Record toggle
             self.record_on = not self.record_on
             return "r"
