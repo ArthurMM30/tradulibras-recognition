@@ -43,6 +43,11 @@ class SignsDescriptionClient():
 
         for sign in self.collection.find({"$and":[cm_query, local_query, trajectory_query]}):
             data_response.append(sign)
+            
+        if(len(data_response) == 0):
+            local_query = {f"phonology.{str(index)}.{hand}.final_local" : "NEUTRO"}
+            for sign in self.collection.find({"$and":[cm_query, local_query, trajectory_query]}):
+                data_response.append(sign)
 
         return SignsDescriptionEntity(data_response)
     
