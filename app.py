@@ -19,6 +19,7 @@ from utils import ModeManager
 from utils import TimerManager
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
+from model import RotationHistoryClassifier
 from repository.signsDescription import SignsDescriptionClient
 from repository.letterDescription import LetterDescriptionClient
 
@@ -52,6 +53,7 @@ def get_args():
 def main():
     keypoint_classifier = KeyPointClassifier()
     point_history_classifier = PointHistoryClassifier()
+    rotation_history_classifier = RotationHistoryClassifier()
 
     repo_sign = SignsDescriptionClient()
     repo_letter = LetterDescriptionClient()
@@ -111,6 +113,16 @@ def main():
             row[0] for row in point_history_classifier_labels
         ]
 
+    with open(
+        "model/rotation_history_classifier/rotation_history_classifier_label.csv",
+        encoding="utf-8-sig",
+    ) as f:
+        rotation_history_classifier_labels = csv.reader(f)
+        rotation_history_classifier_labels = [
+            row[0] for row in rotation_history_classifier_labels
+        ]
+
+
 
     history_length = 16
     point_history = {
@@ -120,11 +132,23 @@ def main():
     pre_processed_point_history_list = {"L": [], "R": []}
 
     finger_gesture_history = {
-        "L": deque(maxlen=history_length // 4),
+        "L": deque(maxlen=history_length // 2),
+        "R": deque(maxlen=history_length // 2),
+    }
+
+    rotation_history = {
+        "L": deque(maxlen=history_length),
         "R": deque(maxlen=history_length),
+    }
+    pre_processed_rotation_history_list = {"L": [], "R": []}
+
+    rotation_gesture_history = {
+        "L": deque(maxlen=history_length // 2),
+        "R": deque(maxlen=history_length // 2),
     }
 
     word = ""
+    hand_fidelity = 70.0
 
 
 
@@ -138,7 +162,8 @@ def main():
 
         received_command = mode_manager.alter_mode_by_key(key) 
         if received_command == "s":
-            spelled_word = word
+            if not mode_manager.is_spelling_on():
+                threading.Thread(target=play_word_in_background, args=(word.lower(), True)).start()
             word = ""
             
         ret, image = cap.read()
@@ -167,7 +192,7 @@ def main():
             pose_landmark_list = calcs.calc_new_pose_landmarks(pose_landmark_list)
 
         #  ####################################################################
-        if hand_results.multi_hand_landmarks is not None:
+        if hand_results.multi_hand_landmarks is not None and pose_results.pose_landmarks is not None:
             for hand_landmarks, handedness in zip(
                 hand_results.multi_hand_landmarks, hand_results.multi_handedness
             ):
@@ -182,11 +207,16 @@ def main():
                 pre_processed_point_history_list[hand_side] = pre_process_point_history(
                     debug_image, point_history[hand_side]
                 )
+                pre_processed_rotation_history_list[hand_side] = pre_process_rotation_history(
+                    debug_image, rotation_history[hand_side]
+                ) 
+                
                 # Write to the dataset file ####################################################################
                 logging_csv(
                     mode_manager,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list[hand_side],
+                    pre_processed_rotation_history_list[hand_side],
                     received_command
                 )
 
@@ -196,20 +226,36 @@ def main():
                 y_hand_axis_size = [
                     calcs.calc_euclidian_distance(landmark_list[0], landmark_list[17])
                 ]
+
                 x_hand_axis_size = [
                     calcs.calc_euclidian_distance(landmark_list[5], landmark_list[17])
+                ]
+
+                k_hand_axis_size = [
+                    calcs.calc_euclidian_distance(landmark_list[0], landmark_list[9])
                 ]
 
                 point_history[hand_side].append(
                     landmark_list[0] + y_hand_axis_size + x_hand_axis_size
                 )
 
+                rotation_history[hand_side].append(x_hand_axis_size + k_hand_axis_size)
                 # Finger gesture classification
                 finger_gesture_id = 0
                 point_history_len = len(pre_processed_point_history_list[hand_side])
                 if point_history_len == (history_length * 4):
                     finger_gesture_id = point_history_classifier(
                         pre_processed_point_history_list[hand_side]
+                    )
+
+                # Rotation gesture classification
+                rotation_gesture_id = 0
+                rotation_history_len = len(
+                    pre_processed_rotation_history_list[hand_side]
+                )
+                if rotation_history_len == (history_length * 2):
+                    rotation_gesture_id = rotation_history_classifier(
+                        pre_processed_rotation_history_list[hand_side]
                     )
 
                 # Calculates the gesture IDs in the latest detection
@@ -221,6 +267,13 @@ def main():
                     ).most_common()
                 else:
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
+
+                rotation_gesture_history[hand_side].append(rotation_gesture_id)
+
+                most_common_rotation_id = 0
+                most_common_rotation_id = Counter(
+                    rotation_gesture_history[hand_side]
+                ).most_common()
 
                 # Getting the top 3 more probable signs
                 probability_rank = ranking_sign_probability(
@@ -242,6 +295,7 @@ def main():
                         brect,
                         hand_side,
                         point_history_classifier_labels[most_common_fg_id[0][0]],
+                        rotation_history_classifier_labels[most_common_rotation_id[0][0]],
                         probability_rank,
                     )
 
@@ -259,8 +313,9 @@ def main():
 
 
                 if mode_manager.is_spelling_on():
+                    cm = probability_rank[0][0] if float(probability_rank[0][1]) > hand_fidelity else "null"
                     if 7 < timer_manager.get_timer() and timer_manager.is_able():
-                        result = repo_letter.getLetterByCM(probability_rank[0][0])
+                        result = repo_letter.getLetterByCM(cm)
                         if len(result) == 1:
                             if result.validateSense("REPOUSO",0):
                                 word += result.getFirstLetter()
@@ -293,18 +348,13 @@ def main():
 
                 else:
                     #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
-                    if received_command == "s": #reconheceu quando acabou a soletragem
-                        threading.Thread(target=play_word_in_background, args=(spelled_word.lower(), True)).start()
                     if 7 < timer_manager.get_timer() and timer_manager.is_able():
 
                         CM = probability_rank[0][0]
                    
                         for trajectory_index in most_common_fg_id:
-                            print("AAAAAAAAAAAAAAAAAAAAA")
                             trajectory = point_history_classifier_labels[trajectory_index[0]]
-                            print(CM, location, trajectory, timer_manager.get_index())
                             result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
-                            print(result.data)
                             if len(result) == 1:
                                 old_word = result.getFirstMotto()
                                 if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
@@ -357,6 +407,7 @@ def main():
             )
 
         # Screen reflection #############################################################
+        cv.namedWindow('Hand Gesture Recognition', cv.WINDOW_NORMAL)
         cv.imshow("Hand Gesture Recognition", debug_image)
 
     cap.release()
@@ -503,10 +554,33 @@ def pre_process_point_history(image, point_history):
 
     return temp_point_history
 
+def pre_process_rotation_history(image, rotation_history):
+    image_height = image.shape[0]
+
+    temp_rotation_history = copy.deepcopy(rotation_history)
+
+    # Convert to relative coordinates
+    base_zy, base_zx = 0, 0
+    for index, point in enumerate(temp_rotation_history):
+        if index == 0:
+            base_zy, base_zx = point[0], point[1]
+
+        temp_rotation_history[index][0] = (
+            temp_rotation_history[index][0] - base_zy
+        ) / image_height
+        temp_rotation_history[index][1] = (
+            temp_rotation_history[index][1] - base_zx
+        ) / image_height
+
+    # Convert to a one-dimensional list
+    temp_rotation_history = list(itertools.chain.from_iterable(temp_rotation_history))
+
+    return temp_rotation_history
+
 
 cm_list = []
 mov_list = []
-def logging_csv(mode_manager, landmark_list, point_history_list, received_command):
+def logging_csv(mode_manager, landmark_list, point_history_list, rotation_history_list, received_command):
     global cm_list
     global mov_list
     mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
@@ -532,6 +606,12 @@ def logging_csv(mode_manager, landmark_list, point_history_list, received_comman
 
                 writer.writerow([train_index, *point_history_list])
             mov_list = []
+
+    if mode == 3:
+        csv_path = "model/rotation_history_classifier/rotation_history.csv"
+        with open(csv_path, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([train_index, *rotation_history_list])
     return
 
 

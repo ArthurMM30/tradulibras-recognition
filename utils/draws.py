@@ -314,7 +314,7 @@ class DrawOnCamera:
         return image
 
 
-    def draw_info_text(self, image, brect, hand_side, finger_gesture_text, probability_rank):
+    def draw_info_text(self, image, brect, hand_side, finger_gesture_text, rotation_gesture_text, probability_rank):
         image_width = image.shape[1]
 
         self.cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22), (0, 0, 0), -1)
@@ -355,6 +355,26 @@ class DrawOnCamera:
                     2,
                     self.cv.LINE_AA,
                 )
+                self.cv.putText(
+                    image,
+                    "R: " + rotation_gesture_text,
+                    (10, 90),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (0, 0, 0),
+                    4,
+                    self.cv.LINE_AA,
+                )
+                self.cv.putText(
+                    image,
+                    "R: " + rotation_gesture_text,
+                    (10, 90),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (152, 251, 152),
+                    2,
+                    self.cv.LINE_AA,
+                )
             else:
                 self.cv.putText(
                     image,
@@ -370,6 +390,26 @@ class DrawOnCamera:
                     image,
                     "T: " + finger_gesture_text,
                     (image_width - 350, 60),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (152, 152, 251),
+                    2,
+                    self.cv.LINE_AA,
+                )
+                self.cv.putText(
+                    image,
+                    "R: " + rotation_gesture_text,
+                    (image_width - 350, 90),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (0, 0, 0),
+                    4,
+                    self.cv.LINE_AA,
+                )
+                self.cv.putText(
+                    image,
+                    "R: " + rotation_gesture_text,
+                    (image_width - 350, 90),
                     self.cv.FONT_HERSHEY_SIMPLEX,
                     1.0,
                     (152, 152, 251),
@@ -502,7 +542,7 @@ class DrawOnCamera:
             self.cv.putText(
                 image,
                 "K:" + str(mode_manager.get_train_index()),
-                (image.shape[1] - 250, image_height - 25),
+                (image.shape[1] - 200, image_height - 55),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 0.6,
                 (0, 0, 0),
@@ -512,7 +552,7 @@ class DrawOnCamera:
             self.cv.putText(
                 image,
                 "K:" + str(mode_manager.get_train_index()),
-                (image.shape[1] - 250, image_height - 25),
+                (image.shape[1] - 200, image_height - 55),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 0.6,
                 (255, 255, 255),
@@ -541,6 +581,50 @@ class DrawOnCamera:
                 2,
                 self.cv.LINE_AA,
             )
+        
+            if mode_manager.is_spelling_on():
+                self.cv.putText(
+                    image,
+                    "SPELLING MODE",
+                    (image.shape[1] - 200, image_height - 20),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 0, 0),
+                    4,
+                    self.cv.LINE_AA,
+                )
+                self.cv.putText(
+                    image,
+                    "SPELLING MODE",
+                    (image.shape[1] - 200, image_height - 20),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (255, 255, 255),
+                    2,
+                    self.cv.LINE_AA,
+                )
+            else: 
+                self.cv.putText(
+                    image,
+                    "SIGN MODE",
+                    (image.shape[1] - 200, image_height - 20),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 0, 0),
+                    4,
+                    self.cv.LINE_AA,
+                )
+                self.cv.putText(
+                    image,
+                    "SIGN MODE",
+                    (image.shape[1] - 200, image_height - 20),
+                    self.cv.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (255, 255, 255),
+                    2,
+                    self.cv.LINE_AA,
+                )
+            
 
         draw_word = unidecode(word) 
         self.cv.putText(
