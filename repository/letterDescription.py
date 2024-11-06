@@ -24,18 +24,11 @@ class LetterDescriptionEntity(object):
     def __init__(self, data):
         self.data = data
 
-
-    def filterLetterBySense(self, data_request):
-        data_response = []
-
-        for sign in self.data:
-            if sign["sense"] == data_request:
-                data_response.append(sign)
-
-        return LetterDescriptionEntity(data_response)
+    def validateSense(self, sense, index):
+        return self.data[0]["sense"][index] == sense
 
     def get(self):
-        return self.data    
+        return self.data 
 
     def getFirstLetter(self):
         return self.data[0]["motto"] 
