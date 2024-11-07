@@ -38,68 +38,33 @@ Para executar o Tradulibras, você precisa de:
 **Passo 1:** </br>
  clone o repositório:
  ```bash
-  git clone https://github.com/ArthurMM30/tradulibras-recognition
+ git clone https://github.com/ArthurMM30/tradulibras-recognition
  ```
-
 **Passo 2:**  </br>
-configure as seguintes bibliotecas:
-
-**OpenCV**: </br>
-processamento de imagens e vídeos
+Dentro da pasta do repositório clonado, instale as dependências necessárias, conforme listado no arquivo requirements.txt
 ```bash
-pip install opencv-python
+pip install -r requirements.txt
 ```
-**MediaPipe**:</br>
-detecção e rastreamento das mãos
-```bash
-pip install mediapipe
-```
-**Numpy**:</br>
-Manipulação de arrays e cálculos
-```bash
-pip install numpy
-```
-**Pandas**:</br>
-Análise e manipulação de dados
-```bash
-pip install pandas
-```
-**Matplotlib**:</br>
-Visualização de dados
-```bash
-pip install matplotlib
-```
-**TensorFlow**:</br>
-Framework de IA
-```bash
-pip install tensorflow
-```
-**pymongo**:</br>
-Integração do Python com o MongoDB
-```bash
-pip install pymongo
-```
-**Unidecode**:</br>
-Normalização de texto
-```bash
-pip install unidecode
-```
-**Seaborn**:</br>
-Visualização de dados
-```bash
-pip install seaborn
-```
-**Playsound**:</br>
-Conversão de texto para áudio
-```bash
-pip install playsound
-```
-
 **Passo 3:** </br>
-rode o arquivo app.py
+Configuração das variáveis de ambiente: </br>
+3.1 :
+     Copie o arquivo .env.example e renomeie para .env.
+   ```bash
+   cp .env.example .env
+   ```
+Faça as alterações necessárias, mas as configurações padrão geralmente já funcionam para a maioria dos casos.
+
+3.2 Subir ambiente no docker: </br>
+     O MongoDB será executado utilizando Docker. Para iniciar o MongoDB com o script de inserção, execute o seguinte comando:
+ ```bash
+ docker compose up -d
+ ```
+   Este comando inicializa o MongoDB no modo detached (em segundo plano)
+   
+**Passo 4:** </br>
+Com o ambiente configurado, ja é possível rodar o Projeto
 ```bash
 python app.py
 ```
 
-
-
+<H2>Está tudo pronto para você explorar a tradução de Libras! </H2>
