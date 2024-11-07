@@ -10,7 +10,7 @@ Inclusão e Acessibilidade: Promove a comunicação entre surdos e ouvintes em d
 Descrição: Este módulo captura imagens e converte as mãos em coordenadas cartesianas. </br>
 Tecnologia: Deep Learning. </br>
 Objetivo: Identificar as posições das mãos para posterior tradução. </br>
-2.**Reconhecimento de Corpo** </br>
+2. **Reconhecimento de Corpo** </br>
 Descrição: Detecta os movimentos do corpo e os gestos em Libras, convertendo-os em coordenadas espaciais. </br>
 Tecnologia: Deep Learning. </br>
 Objetivo: Identificar movimentos corporais, como gestos e expressões faciais, que são cruciais para a tradução de Libras. </br>
