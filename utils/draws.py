@@ -314,7 +314,7 @@ class DrawOnCamera:
         return image
 
 
-    def draw_info_text(self, image, brect, hand_side, finger_gesture_text, rotation_gesture_text, probability_rank):
+    def draw_info_text(self, image, brect, hand_side, finger_gesture_text, rotation_gesture_text, probability_rank, mode_manager):
         image_width = image.shape[1]
 
         self.cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22), (0, 0, 0), -1)
@@ -379,7 +379,7 @@ class DrawOnCamera:
                 self.cv.putText(
                     image,
                     "T: " + finger_gesture_text,
-                    (image_width - 350, 60),
+                    (image_width - 250, 60),
                     self.cv.FONT_HERSHEY_SIMPLEX,
                     1.0,
                     (0, 0, 0),
@@ -389,130 +389,157 @@ class DrawOnCamera:
                 self.cv.putText(
                     image,
                     "T: " + finger_gesture_text,
-                    (image_width - 350, 60),
+                    (image_width - 250, 60),
                     self.cv.FONT_HERSHEY_SIMPLEX,
                     1.0,
                     (152, 152, 251),
                     2,
                     self.cv.LINE_AA,
                 )
-                self.cv.putText(
-                    image,
-                    "R: " + rotation_gesture_text,
-                    (image_width - 350, 90),
-                    self.cv.FONT_HERSHEY_SIMPLEX,
-                    1.0,
-                    (0, 0, 0),
-                    4,
-                    self.cv.LINE_AA,
-                )
-                self.cv.putText(
-                    image,
-                    "R: " + rotation_gesture_text,
-                    (image_width - 350, 90),
-                    self.cv.FONT_HERSHEY_SIMPLEX,
-                    1.0,
-                    (152, 152, 251),
-                    2,
-                    self.cv.LINE_AA,
-                )
+                if mode_manager.is_dev_mode():
+                    self.cv.putText(
+                        image,
+                        "R: " + rotation_gesture_text,
+                        (image_width - 250, 90),
+                        self.cv.FONT_HERSHEY_SIMPLEX,
+                        1.0,
+                        (0, 0, 0),
+                        4,
+                        self.cv.LINE_AA,
+                    )
+                    self.cv.putText(
+                        image,
+                        "R: " + rotation_gesture_text,
+                        (image_width - 250, 90),
+                        self.cv.FONT_HERSHEY_SIMPLEX,
+                        1.0,
+                        (152, 152, 251),
+                        2,
+                        self.cv.LINE_AA,
+                    )
 
-        self.cv.rectangle(
-            image, (brect[0], brect[3]), (brect[2], brect[3] + 44), (63, 63, 63), -1
-        )
+        if mode_manager.is_dev_mode():
+            self.cv.rectangle(
+                image, (brect[0], brect[3]), (brect[2], brect[3] + 44), (63, 63, 63), -1
+            )
 
-        self.cv.putText(
-            image,
-            probability_rank[1][0],
-            (brect[0] + 5, brect[3] + 16),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (255, 255, 255),
-            1,
-            self.cv.LINE_AA,
-        )
-        self.cv.putText(
-            image,
-            probability_rank[1][1],
-            (brect[2] - 44, brect[3] + 16),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (255, 255, 255),
-            1,
-            self.cv.LINE_AA,
-        )
+            self.cv.putText(
+                image,
+                probability_rank[1][0],
+                (brect[0] + 5, brect[3] + 16),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                1,
+                self.cv.LINE_AA,
+            )
+            self.cv.putText(
+                image,
+                probability_rank[1][1],
+                (brect[2] - 44, brect[3] + 16),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                1,
+                self.cv.LINE_AA,
+            )
 
-        self.cv.putText(
-            image,
-            probability_rank[2][0],
-            (brect[0] + 5, brect[3] + 40),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (255, 255, 255),
-            1,
-            self.cv.LINE_AA,
-        )
-        self.cv.putText(
-            image,
-            probability_rank[2][1],
-            (brect[2] - 44, brect[3] + 40),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (255, 255, 255),
-            1,
-            self.cv.LINE_AA,
-        )
+            self.cv.putText(
+                image,
+                probability_rank[2][0],
+                (brect[0] + 5, brect[3] + 40),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                1,
+                self.cv.LINE_AA,
+            )
+            self.cv.putText(
+                image,
+                probability_rank[2][1],
+                (brect[2] - 44, brect[3] + 40),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                1,
+                self.cv.LINE_AA,
+            )
 
         return image
 
 
-    def draw_point_history(self,image, point_history):
-        for index, point in enumerate(point_history["L"]):
-            if point[0] != 0 and point[1] != 0:
-                self.cv.circle(
-                    image,
-                    (point[0], point[1]),
-                    (point[2] ** 2 * 6) // 700 + index,
-                    (152, 251, 152),
-                    2,
-                )
+    def draw_point_history(self,image, point_history, mode_manager):
+        if mode_manager.is_dev_mode():
+            for index, point in enumerate(point_history["L"]):
+                if point[0] != 0 and point[1] != 0:
+                    self.cv.circle(
+                        image,
+                        (point[0], point[1]),
+                        (point[2] ** 2 * 6) // 700 + index,
+                        (152, 251, 152),
+                        2,
+                    )
 
-        for index, point in enumerate(point_history["R"]):
-            if point[0] != 0 and point[1] != 0:
-                self.cv.circle(
-                    image,
-                    (point[0], point[1]),
-                    (point[2] ** 2 * 6) // 700 + index,
-                    (152, 152, 251),
-                    2,
-                )
+            for index, point in enumerate(point_history["R"]):
+                if point[0] != 0 and point[1] != 0:
+                    self.cv.circle(
+                        image,
+                        (point[0], point[1]),
+                        (point[2] ** 2 * 6) // 700 + index,
+                        (152, 152, 251),
+                        2,
+                    )
 
         return image
 
 
-    def draw_info(self,image, fps, mode_manager, timer, word):
+    def draw_info(self,image, fps, mode_manager, timer):
         image_width, image_height = image.shape[1], image.shape[0]
 
-        self.cv.putText(
-            image,
-            str(fps),
-            (image_width // 2 - 30, 30),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            1.0,
-            (0, 0, 0),
-            4,
-            self.cv.LINE_AA,
-        )
-        self.cv.putText(
-            image,
-            str(fps),
-            (image_width // 2 - 30, 30),
-            self.cv.FONT_HERSHEY_SIMPLEX,
-            1.0,
-            (255, 255, 255),
-            2,
-            self.cv.LINE_AA,
-        )
+        if mode_manager.is_dev_mode():
+            self.cv.putText(
+                image,
+                str(fps),
+                (image_width // 2 - 30, 30),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (0, 0, 0),
+                4,
+                self.cv.LINE_AA,
+            )
+            self.cv.putText(
+                image,
+                str(fps),
+                (image_width // 2 - 30, 30),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (255, 255, 255),
+                2,
+                self.cv.LINE_AA,
+            )
+
+            self.cv.putText(
+                image,
+                "TIMER:" + str(timer),
+                (10, image_height - 25),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (0, 0, 0),
+                4,
+                self.cv.LINE_AA,
+            )
+            self.cv.putText(
+                image,
+                "TIMER:" + str(timer),
+                (10, image_height - 25),
+                self.cv.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (255, 255, 255),
+                2,
+                self.cv.LINE_AA,
+            )
+
+
 
         if mode_manager.is_train_mode():
             active = " ON" if mode_manager.is_record_on() else " OFF"
@@ -561,27 +588,6 @@ class DrawOnCamera:
             )
 
         if mode_manager.is_hand_able():
-            self.cv.putText(
-                image,
-                "TIMER:" + str(timer),
-                (10, image_height - 25),
-                self.cv.FONT_HERSHEY_SIMPLEX,
-                1.0,
-                (0, 0, 0),
-                4,
-                self.cv.LINE_AA,
-            )
-            self.cv.putText(
-                image,
-                "TIMER:" + str(timer),
-                (10, image_height - 25),
-                self.cv.FONT_HERSHEY_SIMPLEX,
-                1.0,
-                (255, 255, 255),
-                2,
-                self.cv.LINE_AA,
-            )
-        
             if mode_manager.is_spelling_on():
                 self.cv.putText(
                     image,
@@ -625,6 +631,10 @@ class DrawOnCamera:
                     self.cv.LINE_AA,
                 )
             
+        return image
+    
+    def draw_word(self, image, word):
+        image_width, image_height = image.shape[1], image.shape[0]
 
         draw_word = unidecode(word) 
         self.cv.putText(
@@ -784,7 +794,7 @@ class DrawOnCamera:
             self.cv.putText(
                 image,
                 "L: " + location,
-                (image.shape[1] - 350, 30),
+                (image.shape[1] - 250, 30),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 1.0,
                 (0, 0, 0),
@@ -794,7 +804,7 @@ class DrawOnCamera:
             self.cv.putText(
                 image,
                 "L: " + location,
-                (image.shape[1] - 350, 30),
+                (image.shape[1] - 250, 30),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 1.0,
                 (152, 152, 251),

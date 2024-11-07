@@ -17,7 +17,8 @@ from utils import Calcs
 from utils import Talks
 from utils import ModeManager
 from utils import TimerManager
-from model import KeyPointClassifier
+from model import SignKeyPointClassifier
+from model import SpellingKeyPointClassifier
 from model import PointHistoryClassifier
 from model import RotationHistoryClassifier
 from repository.signsDescription import SignsDescriptionClient
@@ -44,6 +45,18 @@ def get_args():
         type=int,
         default=0.5,
     )
+    parser.add_argument(
+        "--min_detection_confidence_pose",
+        help="min_detection_confidence_pose",
+        type=float,
+        default=0.7,
+    )
+    parser.add_argument(
+        "--min_tracking_confidence_pose",
+        help="min_tracking_confidence_pose",
+        type=int,
+        default=0.5,
+    )
 
     args = parser.parse_args()
 
@@ -51,7 +64,8 @@ def get_args():
 
 
 def main():
-    keypoint_classifier = KeyPointClassifier()
+    sign_keypoint_classifier = SignKeyPointClassifier()
+    spelling_keypoint_classifier = SpellingKeyPointClassifier()
     point_history_classifier = PointHistoryClassifier()
     rotation_history_classifier = RotationHistoryClassifier()
 
@@ -75,6 +89,8 @@ def main():
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
     min_tracking_confidence = args.min_tracking_confidence
+    min_detection_confidence_pose = args.min_detection_confidence_pose
+    min_tracking_confidence_pose = args.min_tracking_confidence_pose
 
     cap = cv.VideoCapture(cap_device)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
@@ -93,16 +109,22 @@ def main():
     pose = mp_pose.Pose(
         static_image_mode=use_static_image_mode,
         model_complexity=0,
-        min_detection_confidence=min_detection_confidence,
-        min_tracking_confidence=min_tracking_confidence,
+        min_detection_confidence=min_detection_confidence_pose,
+        min_tracking_confidence=min_tracking_confidence_pose,
     )
 
     # Read labels ###########################################################
     with open(
-        "model/keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
+        "model/sign_keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
     ) as f:
-        keypoint_classifier_labels = csv.reader(f)
-        keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
+        sign_keypoint_classifier_labels = csv.reader(f)
+        sign_keypoint_classifier_labels = [row[0] for row in sign_keypoint_classifier_labels]
+
+    with open(
+        "model/spelling_keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
+    ) as f:
+        spelling_keypoint_classifier_labels = csv.reader(f)
+        spelling_keypoint_classifier_labels = [row[0] for row in spelling_keypoint_classifier_labels]
 
     with open(
         "model/point_history_classifier/point_history_classifier_label.csv",
@@ -148,7 +170,8 @@ def main():
     }
 
     word = ""
-    hand_fidelity = 70.0
+    hand_fidelity = 50.0
+    timer_limit = 10
 
 
 
@@ -162,8 +185,9 @@ def main():
 
         received_command = mode_manager.alter_mode_by_key(key) 
         if received_command == "s":
-            if not mode_manager.is_spelling_on():
+            if not mode_manager.is_spelling_on() and word != "":
                 threading.Thread(target=play_word_in_background, args=(word.lower(), True)).start()
+            timer_manager.reset_timer()
             word = ""
             
         ret, image = cap.read()
@@ -191,6 +215,9 @@ def main():
             pose_landmark_list = calcs.calc_pose_landmark_list(debug_image, pose_landmarks)
             pose_landmark_list = calcs.calc_new_pose_landmarks(pose_landmark_list)
 
+        # print(pose_results.pose_landmarks)
+        # print("a")
+        # print(hand_results.multi_hand_landmarks)
         #  ####################################################################
         if hand_results.multi_hand_landmarks is not None and pose_results.pose_landmarks is not None:
             for hand_landmarks, handedness in zip(
@@ -220,8 +247,20 @@ def main():
                     received_command
                 )
 
-                # Hand sign classification
-                sign_percantage = keypoint_classifier(pre_processed_landmark_list)
+                if mode_manager.is_spelling_on():
+                    # Hand sign classification
+                    sign_percantage = spelling_keypoint_classifier(pre_processed_landmark_list)
+
+                    # Getting the top 3 more probable signs
+                    probability_rank = ranking_sign_probability(
+                        spelling_keypoint_classifier_labels, list(sign_percantage)
+                    )
+                else:
+                    sign_percantage = sign_keypoint_classifier(pre_processed_landmark_list)
+
+                    probability_rank = ranking_sign_probability(
+                        sign_keypoint_classifier_labels, list(sign_percantage)
+                    )
 
                 y_hand_axis_size = [
                     calcs.calc_euclidian_distance(landmark_list[0], landmark_list[17])
@@ -275,11 +314,6 @@ def main():
                     rotation_gesture_history[hand_side]
                 ).most_common()
 
-                # Getting the top 3 more probable signs
-                probability_rank = ranking_sign_probability(
-                    keypoint_classifier_labels, list(sign_percantage)
-                )
-
                 wrist_hand_points[hand_side] = landmark_list[0]
                 location = identify_hand_area(
                     landmark_list[5], hand_side, pose_landmark_list
@@ -297,6 +331,7 @@ def main():
                         point_history_classifier_labels[most_common_fg_id[0][0]],
                         rotation_history_classifier_labels[most_common_rotation_id[0][0]],
                         probability_rank,
+                        mode_manager
                     )
 
                 if mode_manager.is_body_able():
@@ -308,78 +343,69 @@ def main():
                         hand_side,
                     )
 
-                if timer_manager.check_if_movement_updated(most_common_fg_id[0][0]) or timer_manager.check_if_CM_updated(probability_rank[0][0]):
+                if timer_manager.check_if_CM_updated(probability_rank[0][0]):
                     timer_manager.reset_timer()
 
-
-                if mode_manager.is_spelling_on():
-                    cm = probability_rank[0][0] if float(probability_rank[0][1]) > hand_fidelity else "null"
-                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
-                        result = repo_letter.getLetterByCM(cm)
-                        if len(result) == 1:
-                            if result.validateSense("REPOUSO",0):
-                                word += result.getFirstLetter()
-                                timer_manager.enable()
-                            else:
-                                for trajectory_index in most_common_fg_id:
-                                    trajectory = point_history_classifier_labels[trajectory_index[0]]
-                                    # print("Traj",trajectory)
-                                    result_validation = result.validateSense(trajectory, timer_manager.get_spelling_index())
-                                    # print(result_validation)
-                                    if result_validation:
-                                        # print("Sense:", len(result.data[0]["sense"]))
-                                        # print("Index:", timer_manager.get_spelling_index()+1)
-                                        if len(result.data[0]["sense"]) == timer_manager.get_spelling_index()+1:
-                                            word += result.getFirstLetter()
-                                            timer_manager.enable()
-                                            timer_manager.set_spelling_index(0)
-                                            # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-                                        else:
-                                            timer_manager.set_spelling_index(timer_manager.get_spelling_index() + 1)
-                                            # print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
-                                    # else:
-                                    #     print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
-                                    #     timer_manager.set_spelling_index(0)
-                                    elif not result_validation and timer_manager.get_spelling_index() > 0:
-                                        if result.validateSense("REPOUSO",0):
-                                            word += result.getFirstLetter()
-                                            timer_manager.enable()
-                                            timer_manager.set_spelling_index(0)
-
-                else:
-                    #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
-                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
-
-                        CM = probability_rank[0][0]
-                   
-                        for trajectory_index in most_common_fg_id:
-                            trajectory = point_history_classifier_labels[trajectory_index[0]]
-                            result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
+                if not mode_manager.is_train_mode():
+                    if mode_manager.is_spelling_on():
+                        cm = probability_rank[0][0] if float(probability_rank[0][1]) > hand_fidelity else "null"
+                        if timer_limit < timer_manager.get_timer() and timer_manager.is_able():
+                            result = repo_letter.getLetterByCM(cm)
                             if len(result) == 1:
-                                old_word = result.getFirstMotto()
-                                if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
-                                    timer_manager.set_index(0)
-                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-
-                                    # if draw_word == "" or draw_word != word:
-                                        # draw_word = word
-                                        # has_a_new_word = True
-                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                if result.validateSense("REPOUSO",0):
+                                    word += result.getFirstLetter()
+                                    timer_manager.enable()
                                 else:
-                                    timer_manager.set_index(timer_manager.get_index() + 1)
+                                    for trajectory_index in most_common_fg_id:
+                                        trajectory = point_history_classifier_labels[trajectory_index[0]]
+                                        result_validation = result.validateSense(trajectory, timer_manager.get_spelling_index())
+                                        if result_validation:
 
-                            elif len(result) == 0 and timer_manager.get_index() > 0:
-                                result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                                            if len(result.data[0]["sense"]) == timer_manager.get_spelling_index()+1:
+                                                word += result.getFirstLetter()
+                                                timer_manager.enable()
+                                                timer_manager.set_spelling_index(0)
+
+                                            else:
+                                                timer_manager.set_spelling_index(timer_manager.get_spelling_index() + 1)
+
+                                        elif not result_validation and timer_manager.get_spelling_index() > 0:
+                                            if result.validateSense("REPOUSO",0):
+                                                word += result.getFirstLetter()
+                                                timer_manager.enable()
+                                                timer_manager.set_spelling_index(0)
+                            elif len(result) == 2:
+                                if result.validate_if_have_rotation():
+                                    result = result.filter_by_sense(rotation_history_classifier_labels[most_common_rotation_id[0][0]])
+                                    if len(result) > 0:
+                                        word += result.getFirstLetter()
+                                        timer_manager.enable()
+                                        timer_manager.set_spelling_index(0)
+
+                    else:
+                        if timer_limit < timer_manager.get_timer() and timer_manager.is_able():
+                            CM = probability_rank[0][0]
+                            for trajectory_index in most_common_fg_id:
+                                trajectory = point_history_classifier_labels[trajectory_index[0]]
+                                result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
                                 if len(result) == 1:
-                                    word_retry = result.getFirstMotto()
-                                    if old_word != word_retry:
+                                    old_word = result.getFirstMotto()
+                                    if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
                                         timer_manager.set_index(0)
-                                        if len(result.data[0]["phonology"]) == 1:
-                                            word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                            # if draw_word == "" or draw_word != word:
-                                                # draw_word = word
-                                                # has_a_new_word = True
-                                            threading.Thread(target=play_word_in_background, args=(word,)).start()  
+                                        word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                        threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                    else:
+                                        timer_manager.set_index(timer_manager.get_index() + 1)
+
+                                elif len(result) == 0 and timer_manager.get_index() > 0:
+                                    result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                                    if len(result) == 1:
+                                        word_retry = result.getFirstMotto()
+                                        if old_word != word_retry:
+                                            timer_manager.set_index(0)
+                                            if len(result.data[0]["phonology"]) == 1:
+                                                word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                threading.Thread(target=play_word_in_background, args=(word,)).start()  
             
                 if timer_manager.get_timer() > 150:
                     timer_manager.reset_timer()
@@ -401,10 +427,11 @@ def main():
             timer_manager.increase_blank_timer()
 
         if mode_manager.is_hand_able():
-            debug_image = draw.draw_point_history(debug_image, point_history)
+            debug_image = draw.draw_point_history(debug_image, point_history, mode_manager)
             debug_image = draw.draw_info(
-                debug_image, fps, mode_manager, timer_manager.get_timer(), word
+                debug_image, fps, mode_manager, timer_manager.get_timer()
             )
+        debug_image = draw.draw_word(debug_image, word)
 
         # Screen reflection #############################################################
         cv.namedWindow('Hand Gesture Recognition', cv.WINDOW_NORMAL)
@@ -586,14 +613,24 @@ def logging_csv(mode_manager, landmark_list, point_history_list, rotation_histor
     mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
 
     if mode == 1:
-        cm_list.append([train_index, *landmark_list])
-        if received_command == "r":
-            csv_path = "model/keypoint_classifier/keypoint.csv"
-            with open(csv_path, "a", newline="") as f:
-                writer = csv.writer(f)
-                for cm in cm_list:
-                    writer.writerow(cm)
-            cm_list = []
+        if mode_manager.is_spelling_on():
+            cm_list.append([train_index, *landmark_list])
+            if received_command == "r":
+                csv_path = "model/spelling_keypoint_classifier/keypoint.csv"
+                with open(csv_path, "a", newline="") as f:
+                    writer = csv.writer(f)
+                    for cm in cm_list:
+                        writer.writerow(cm)
+                cm_list = []
+        else:
+            cm_list.append([train_index, *landmark_list])
+            if received_command == "r":
+                csv_path = "model/sign_keypoint_classifier/keypoint.csv"
+                with open(csv_path, "a", newline="") as f:
+                    writer = csv.writer(f)
+                    for cm in cm_list:
+                        writer.writerow(cm)
+                cm_list = []
 
     if mode == 2:
         mov_list.append([train_index, *point_history_list])

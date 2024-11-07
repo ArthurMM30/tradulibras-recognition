@@ -19,14 +19,14 @@ class ModeManager:
             self.mode = 1
         if key == ord("h"):     # History point configuration mode
             self.mode = 2
+        if key == ord("f"):     # History point configuration mode
+            self.mode = 3
         if key == ord("r"):     # Record toggle
             self.record_on = not self.record_on
             return "r"
         if key == ord("b"):     # Able Body
             self.view_mode += 1
-            self.view_mode %= 3
-        if key == ord("e"):     # Language Toggle
-            self.english_on = not self.english_on
+            self.view_mode %= 4
         if key == ord("s"):     # Spelling Toggle
             self.spelling_on = not self.spelling_on
             return "s"
@@ -42,7 +42,7 @@ class ModeManager:
         return self.train_index
 
     def get_train_text(self):
-        mode_string = ["","CM Training", "Movement Training", "Rotation Training"]
+        mode_string = ["","CM Training", "Movement Training", "Rotation Training", ""]
 
         return mode_string[self.mode]
     
@@ -63,7 +63,10 @@ class ModeManager:
         return self.view_mode >= 1
 
     def is_body_able(self):
-        return self.view_mode == 2
+        return self.view_mode >= 2
+
+    def is_dev_mode(self):
+        return self.view_mode == 3
 
 
     # Language options

@@ -1,0 +1,172 @@
+[
+    {
+      motto: '0',
+      CM: '0',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '1',
+      CM: '1',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '2',
+      CM: '2',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '3',
+      CM: '3',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '4',
+      CM: '4',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '5',
+      CM: '5',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '6',
+      CM: '6',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '7',
+      CM: '7',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: '8',
+      CM: 'S',
+      sense: [ 'FRENTE' ]
+    },
+    {
+      motto: '9',
+      CM: '9',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'A',
+      CM: 'A',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'B',
+      CM: 'B',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'C',
+      CM: 'C',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'D',
+      CM: 'D',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'E',
+      CM: 'E',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'F',
+      CM: 'F',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'G',
+      CM: 'G',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'H',
+      CM: 'H',
+      sense: [ 'ROTACAO' ]
+    },
+    {
+      motto: 'I',
+      CM: 'I',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'J',
+      CM: 'I',
+      sense: [ 'FLEXAO' ]
+    },
+    {
+      motto: 'K',
+      CM: 'H',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'L',
+      CM: 'L',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'M',
+      CM: 'M',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'N',
+      CM: 'N',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'O',
+      CM: 'O',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'P',
+      CM: 'P',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'Q',
+      CM: 'Q',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'R',
+      CM: 'R',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'S',
+      CM: 'S',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'U',
+      CM: 'U',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'V',
+      CM: 'V',
+      sense: [ 'REPOUSO' ]
+    },
+    {
+      motto: 'W',
+      CM: 'W',
+      sense: [ 'CIMA' ]
+    },
+    {
+      motto: 'X',
+      CM: 'X',
+      sense: [ 'TRAS' ]
+    },
+    {
+      motto: 'Z',
+      CM: '1',
+      sense: [ 'ESQUERDA', 'DIAGONAL BD', 'ESQUERDA' ]
+    },
+  ]
