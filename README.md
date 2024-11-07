@@ -38,7 +38,7 @@ Para executar o Tradulibras, você precisa de:
 -> Docker: Usado para gerenciar o ambiente e rodar o MongoDB, o banco de dados NoSQL responsável pelo armazenamento de dados de sinais e traduções.
 
 **Passo 1:** </br>
- clone o repositório:
+ Clone o repositório:
  ```bash
  git clone https://github.com/ArthurMM30/tradulibras-recognition
  ```
