@@ -71,9 +71,41 @@ python app.py
 
 <H2>Está tudo pronto para você explorar a tradução de Libras! </H2>
 
+### Forma de acesso às funcionalidades:
+Ao executar o programa, você terá algumas possibilidades do que fazer:
+
+**Teste do programa**:</br>
+Ao entrar no programa por padrão ele estará no modo de soletragem, ou seja, identificará as letras do alfabeto.</br>
+Teste algumas letras como A, B, C! Infelizmente tivemos problemas com a letra "T". Mas estamos trabalhando nisso!
+
+Para sair da parte de soletragem, pressione a techa "**S**" e dessa forma trocará para a parte de identificação de sinais! </br>
+Como por exemplo: [🤙, 🤟, ☝, 👍]
+
+Ainda temos as opções de visualização, podemos pressionar a tecla "**B**" algumas vezes:</br>
+Pressionando B 1 vez, será vizualizado a palavra que está sendo gesticulada.</br>
+Pressionando B 2 vezes, será possível visualizar a os pontos identificadores da mão.</br>
+Pressionando B 3 vezes, será possível visualizar os identificadores do corpo.</br>
+Pressionando B 4 vezes, será possível visualizar os frames de movimento, rotação, timer e FPS.
+
+**Como gravar novas CMs?**</br>
+Para gravas CMs de sinais e soletragem:</br>
+Após abrir o programa, pressione a tecla "**K**".</br>
+Verifique se está na área de sinais ou soletragem, para alterar é preciso apenas pressionar a tecla "**S**"</br>
+Pressione o número desejado para gravar o novo sinal para determinar seu id. E por fim pressione a tecla "**R**" para iniciar a gravação, e pressione novamente para interromper a gravação.
+
+Para treinamento de movimento:</br>
+Após abrir o programa, presssione a tecla "**H**" para abrir o treinamento de movimento como frente, trás, direita, esquerda, etc.</br>
+Pressione "**R**" para iniciar e interromper a gravação.
+</br>
+Treinamento de flexão:</br>
+Após abrir o programa, presssione a tecla "**F**" para abrir o treinamento de flexão, rotação e repouso.</br>
+Pressione "**R**" para iniciar e interromper a gravação.
+
+
+
 ## Colaboradores:
-- Arthur Matos Macedo 
-- Diogo Oliveira Lima
-- Helena Barbosa Costa
-- Mirella Ayumi Miyakawa
-- Rafaella Guimaraes Venturini
+- [Arthur Matos Macedo](https://github.com/ArthurMM30)
+- [Diogo Oliveira Lima](https://github.com/DiogoOLIVEIRAlima)
+- [Helena Barbosa Costa](https://github.com/helenabc01)
+- [Mirella Ayumi Miyakawa](https://github.com/MiyakawaMirella)
+- [Rafaella Guimaraes Venturini](https://github.com/DriRaYV)
