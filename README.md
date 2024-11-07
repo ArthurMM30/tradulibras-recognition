@@ -82,10 +82,10 @@ Para sair da parte de soletragem, pressione a techa "**S**" e dessa forma trocar
 Como por exemplo: [🤙, 🤟, ☝, 👍]
 
 Ainda temos as opções de visualização, podemos pressionar a tecla "**B**" algumas vezes:</br>
-Pressionando B 1 vez, será vizualizado a palavra que está sendo gesticulada.</br>
-Pressionando B 2 vezes, será possível visualizar a os pontos identificadores da mão.</br>
-Pressionando B 3 vezes, será possível visualizar os identificadores do corpo.</br>
-Pressionando B 4 vezes, será possível visualizar os frames de movimento, rotação, timer e FPS.
+- Pressionando B 1 vez, será vizualizado a palavra que está sendo gesticulada.</br>
+- Pressionando B 2 vezes, será possível visualizar a os pontos identificadores da mão.</br>
+- Pressionando B 3 vezes, será possível visualizar os identificadores do corpo.</br>
+- Pressionando B 4 vezes, será possível visualizar os frames de movimento, rotação, timer e FPS.
 
 **Como gravar novas CMs?**</br>
 Para gravas CMs de sinais e soletragem:</br>
