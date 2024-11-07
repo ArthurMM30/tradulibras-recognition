@@ -1,5 +1,5 @@
 services:
-  mongo1:
+  mongo:
     build: ./docker/mongo
     container_name: tradulibras-mongo
     restart: always
