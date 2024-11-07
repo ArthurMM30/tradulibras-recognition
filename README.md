@@ -70,3 +70,10 @@ python app.py
 ```
 
 <H2>Está tudo pronto para você explorar a tradução de Libras! </H2>
+
+## Colaboradores:
+- Arthur Matos Macedo 
+- Diogo Oliveira Lima
+- Helena Barbosa Costa
+- Mirella Ayumi Miyakawa
+- Rafaella Guimaraes Venturini
