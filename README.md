@@ -5,6 +5,8 @@ Funcionalidades
 Tradução de Libras para Texto e Áudio: Captura e traduz gestos em Libras para texto em português e, opcionalmente, gera áudio com a tradução.
 Inclusão e Acessibilidade: Promove a comunicação entre surdos e ouvintes em diferentes contextos, proporcionando mais oportunidades de interação e integração.
 
+A branch principal do repositório é a main. Certifique-se de estar nessa branch para realizar a instalação e execução do projeto.
+
 ## Arquitetura:
 1. **Reconhecimento de Imagem** </br>
 Descrição: Este módulo captura imagens e converte as mãos em coordenadas cartesianas. </br>
