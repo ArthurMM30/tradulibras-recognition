@@ -78,12 +78,12 @@ Ao executar o programa, você terá algumas possibilidades do que fazer:
 Ao entrar no programa por padrão ele estará no modo de soletragem, ou seja, identificará as letras do alfabeto.</br>
 Teste algumas letras como A, B, C! Infelizmente tivemos problemas com a letra "T". Mas estamos trabalhando nisso!
 
-Para sair da parte de soletragem, pressione a techa "**S**" e dessa forma trocará para a parte de identificação de sinais! </br>
-Como por exemplo: [🤙, 🤟, ☝, 👍]
+Para sair da parte de soletragem, pressione a tecla "**S**" e dessa forma trocará para a parte de identificação de sinais! </br>
+Como por exemplo: [🤙, 🤟, 👍]
 
 Ainda temos as opções de visualização, podemos pressionar a tecla "**B**" algumas vezes:</br>
-- Pressionando B 1 vez, será vizualizado a palavra que está sendo gesticulada.</br>
-- Pressionando B 2 vezes, será possível visualizar a os pontos identificadores da mão.</br>
+- Pressionando B 1 vez, será visualizado a palavra que está sendo gesticulada.</br>
+- Pressionando B 2 vezes, será possível visualizar os pontos identificadores da mão.</br>
 - Pressionando B 3 vezes, será possível visualizar os identificadores do corpo.</br>
 - Pressionando B 4 vezes, será possível visualizar os frames de movimento, rotação, timer e FPS.
 
