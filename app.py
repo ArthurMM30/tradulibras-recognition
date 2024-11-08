@@ -172,9 +172,6 @@ def main():
 
     word = ""
     hand_fidelity = 50.0
-    timer_limit = 14
-
-
 
     while True:
         fps = cvFpsCalc.get()
@@ -344,13 +341,13 @@ def main():
                         hand_side,
                     )
 
-                if timer_manager.check_if_CM_updated(probability_rank[0][0]):
+                if timer_manager.check_if_CM_updated(probability_rank[0][0], hand_side):
                     timer_manager.reset_timer()
 
                 if not mode_manager.is_train_mode():
                     if mode_manager.is_spelling_on():
                         cm = probability_rank[0][0] if float(probability_rank[0][1]) > hand_fidelity else "null"
-                        if timer_limit < timer_manager.get_timer() and timer_manager.is_able():
+                        if 12 < timer_manager.get_timer() and timer_manager.is_able():
                             result = repo_letter.getLetterByCM(cm)
                             if len(result) == 1:
                                 if result.validateSense("REPOUSO",0):
@@ -383,30 +380,69 @@ def main():
                                         timer_manager.enable()
                                         timer_manager.set_spelling_index(0)
 
-                    else:
-                        if timer_limit < timer_manager.get_timer() and timer_manager.is_able():
-                            CM = probability_rank[0][0]
-                            for trajectory_index in most_common_fg_id:
-                                trajectory = point_history_classifier_labels[trajectory_index[0]]
-                                result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, timer_manager.get_index())    
-                                if len(result) == 1:
-                                    old_word = result.getFirstMotto()
-                                    if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
-                                        timer_manager.set_index(0)
-                                        word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                        threading.Thread(target=play_word_in_background, args=(word,)).start()
-                                    else: 
-                                        timer_manager.set_index(timer_manager.get_index() + 1)
+                else:
+                    #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
+                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
 
-                                elif len(result) == 0 and timer_manager.get_index() > 0:
-                                    result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
-                                    if len(result) == 1:
-                                        word_retry = result.getFirstMotto()
-                                        if old_word != word_retry:
-                                            timer_manager.set_index(0)
-                                            if len(result.data[0]["phonology"]) == 1:
-                                                word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                                threading.Thread(target=play_word_in_background, args=(word,)).start()  
+                        CM = probability_rank[0][0]
+                   
+                        for trajectory_index in most_common_fg_id:
+                                rotation  = rotation_history_classifier_labels[most_common_rotation_id[0][0]]
+                                trajectory = point_history_classifier_labels[trajectory_index[0]]
+                                isDominant = hand_side == "R"
+                                
+                                if(timer_manager.get_save_result_hand() != {} and timer_manager.get_save_result_hand()["side"] != hand_side):
+                                    hand_temp = timer_manager.get_save_result_hand() 
+                                    word = hand_temp["motto"]
+                                    timer_manager.set_save_result_hand({})
+                                    timer_manager.enable()
+                                    timer_manager.set_index(0)
+                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                else:    
+                                    print(f"parametros busca no banco: {CM} / {location} / {trajectory} / {rotation} / {timer_manager.get_index()} / {isDominant}")
+                                    result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, rotation, timer_manager.get_index(), isDominant)    
+                                    print(f"Resultado: {result.data}")
+                                    if len(result) > 0:
+                                        old_word = result.getFirstMotto()
+                                        if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
+                                            if(isDominant):
+                                                auxiliar_hand = result.data[0]["phonology"][timer_manager.get_index()]["auxiliar_hand"]
+                                                if(auxiliar_hand != None):
+                                    
+                                                    auxiliar_hand["side"] = hand_side
+                                                    auxiliar_hand["motto"] = result.data[0]["motto"]
+                                                    timer_manager.set_save_result_hand(auxiliar_hand)
+                                                else:
+                                                    timer_manager.set_index(0)
+                                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                    timer_manager.enable()
+                                                    timer_manager.set_save_result_hand({})
+                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                            else:
+                                                dominant_hand = result.data[0]["phonology"][timer_manager.get_index()]["dominant_hand"]
+                                                if(dominant_hand != None):
+                                                
+                                                    dominant_hand["side"] = hand_side
+                                                    dominant_hand["motto"] = result.data[0]["motto"]
+                                                    timer_manager.set_save_result_hand(dominant_hand)
+                                                else:
+                                                    timer_manager.set_index(0)
+                                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                    timer_manager.enable()
+                                                    timer_manager.set_save_result_hand({})
+                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                        else:       
+                                            timer_manager.set_index(timer_manager.get_index() + 1)    
+                                    elif len(result) == 0 and timer_manager.get_index() > 0:
+                                        result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
+                                        if len(result) == 1:
+                                            word_retry = result.getFirstMotto()
+                                            if old_word != word_retry:
+                                                timer_manager.set_index(0)
+                                                if len(result.data[0]["phonology"]) == 1:
+                                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()  
+
             
                 if timer_manager.get_timer() > 150:
                     timer_manager.reset_timer()
@@ -423,7 +459,7 @@ def main():
 
             if timer_manager.get_blank_timer() == 150:
                 # draw_word = ""
-                timer_manager.reset()
+                timer_manager.reset_timer()
 
             timer_manager.increase_blank_timer()
 
