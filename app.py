@@ -165,13 +165,14 @@ def main():
     pre_processed_rotation_history_list = {"L": [], "R": []}
 
     rotation_gesture_history = {
-        "L": deque(maxlen=history_length // 2),
-        "R": deque(maxlen=history_length // 2),
+        "L": deque(maxlen=history_length // 4),
+        "R": deque(maxlen=history_length // 4
+                   ),
     }
 
     word = ""
     hand_fidelity = 50.0
-    timer_limit = 10
+    timer_limit = 14
 
 
 
@@ -394,7 +395,7 @@ def main():
                                         timer_manager.set_index(0)
                                         word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
                                         threading.Thread(target=play_word_in_background, args=(word,)).start()
-                                    else:
+                                    else: 
                                         timer_manager.set_index(timer_manager.get_index() + 1)
 
                                 elif len(result) == 0 and timer_manager.get_index() > 0:
@@ -607,9 +608,11 @@ def pre_process_rotation_history(image, rotation_history):
 
 cm_list = []
 mov_list = []
+rot_list = []
 def logging_csv(mode_manager, landmark_list, point_history_list, rotation_history_list, received_command):
     global cm_list
     global mov_list
+    global rot_list
     mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
 
     if mode == 1:
@@ -645,10 +648,16 @@ def logging_csv(mode_manager, landmark_list, point_history_list, rotation_histor
             mov_list = []
 
     if mode == 3:
-        csv_path = "model/rotation_history_classifier/rotation_history.csv"
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([train_index, *rotation_history_list])
+        rot_list.append([train_index, *rotation_history_list])
+        if received_command == "r":
+            csv_path = "model/rotation_history_classifier/rotation_history.csv"
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.writer(f)
+                for rot in rot_list:
+                    writer.writerow(rot)
+
+                writer.writerow([train_index, *rotation_history_list])
+            rot_list = []
     return
 
 
