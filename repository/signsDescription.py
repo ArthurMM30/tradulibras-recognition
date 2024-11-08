@@ -89,6 +89,7 @@ class SignsDescriptionEntity(object):
         return SignsDescriptionEntity(data_response)
     
     def validate_if_a_sign_can_finish(self, index):
+        print(self.data)
         for sign in self.data:
             if len(sign["phonology"]) == index:
                 return True;
