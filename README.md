@@ -35,7 +35,7 @@ Objetivo: Tratar e corrigir qualquer rotação ou mudança de posição que poss
 Para executar o Tradulibras, você precisa de:
 
 -> Python 3.x: A linguagem de programação principal para o desenvolvimento. </br>
--> Docker: Usado para gerenciar o ambiente e rodar o MongoDB, o banco de dados NoSQL responsável pelo armazenamento de dados de sinais e traduções.
+-> Docker 27.1.2: Usado para gerenciar o ambiente e rodar o MongoDB, o banco de dados NoSQL responsável pelo armazenamento de dados de sinais e traduções.
 
 **Passo 1:** </br>
  Clone o repositório:
