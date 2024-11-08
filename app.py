@@ -146,6 +146,11 @@ def main():
         "L": deque(maxlen=history_length // 2),
         "R": deque(maxlen=history_length // 2),
     }
+    
+    validate_if_a_sign_can_finish = False
+    
+    sign_history = []
+    params_history = []
 
     word = ""
     hand_fidelity = 70.0
@@ -309,8 +314,12 @@ def main():
                     )
 
                 if timer_manager.check_if_CM_updated(probability_rank[0][0], hand_side):
+                    #Tira o eu do mock
                     timer_manager.reset_timer()
-
+                    if validate_if_a_sign_can_finish and sign_history != []:
+                        sign_history.pop(0)
+                        validate_if_a_sign_can_finish = False
+                        
 
                 if mode_manager.is_spelling_on():
                     cm = probability_rank[0][0] if float(probability_rank[0][1]) > hand_fidelity else "null"
@@ -323,23 +332,14 @@ def main():
                             else:
                                 for trajectory_index in most_common_fg_id:
                                     trajectory = point_history_classifier_labels[trajectory_index[0]]
-                                    # print("Traj",trajectory)
                                     result_validation = result.validateSense(trajectory, timer_manager.get_spelling_index())
-                                    # print(result_validation)
                                     if result_validation:
-                                        # print("Sense:", len(result.data[0]["sense"]))
-                                        # print("Index:", timer_manager.get_spelling_index()+1)
                                         if len(result.data[0]["sense"]) == timer_manager.get_spelling_index()+1:
                                             word += result.getFirstLetter()
                                             timer_manager.enable()
                                             timer_manager.set_spelling_index(0)
-                                            # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                                         else:
                                             timer_manager.set_spelling_index(timer_manager.get_spelling_index() + 1)
-                                            # print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
-                                    # else:
-                                    #     print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
-                                    #     timer_manager.set_spelling_index(0)
                                     elif not result_validation and timer_manager.get_spelling_index() > 0:
                                         if result.validateSense("REPOUSO",0):
                                             word += result.getFirstLetter()
@@ -348,7 +348,7 @@ def main():
 
                 else:
                     #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA
-                    if 13 < timer_manager.get_timer() and timer_manager.is_able():
+                    if 7 < timer_manager.get_timer() and timer_manager.is_able():
 
                         CM = probability_rank[0][0]
                    
@@ -356,60 +356,96 @@ def main():
                                 rotation  = rotation_history_classifier_labels[most_common_rotation_id[0][0]]
                                 trajectory = point_history_classifier_labels[trajectory_index[0]]
                                 isDominant = hand_side == "R"
-                                
-                                if(timer_manager.get_save_result_hand() != {} and timer_manager.get_save_result_hand()["side"] != hand_side):
+                                if(timer_manager.get_save_result_hand() != {} and timer_manager.get_save_result_hand()["side"] != hand_side): # Condicional para sinais com 2 mãos
                                     hand_temp = timer_manager.get_save_result_hand() 
-                                    word = hand_temp["motto"]
-                                    timer_manager.set_save_result_hand({})
-                                    timer_manager.enable()
-                                    timer_manager.set_index(0)
-                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                    print(f"TESTE1: {hand_temp["CM"]} / {hand_temp["sense"]} / {hand_temp["final_local"]} / {hand_temp["rotation"]}")
+                                    print(f"TESTE2: {CM} / {trajectory} / {location} / {rotation}")
+                                    if(hand_temp["CM"] == CM and hand_temp["sense"] == trajectory and hand_temp["final_local"] == location and hand_temp["rotation"] == rotation) :
+                                        word = hand_temp["motto"]
+                                        timer_manager.set_save_result_hand({})
+                                        timer_manager.enable()
+                                        timer_manager.set_index(0)
+                                        sign_history = []
+                                        validate_if_a_sign_can_finish = False
+                                        threading.Thread(target=play_word_in_background, args=(word,)).start()
                                 else:    
-                                    print(f"parametros busca no banco: {CM} / {location} / {trajectory} / {rotation} / {timer_manager.get_index()} / {isDominant}")
-                                    result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, rotation, timer_manager.get_index(), isDominant)    
-                                    print(f"Resultado: {result.data}")
-                                    if len(result) > 0:
-                                        old_word = result.getFirstMotto()
-                                        if(len(result.data[0]["phonology"]) == timer_manager.get_index()+1):
-                                            if(isDominant):
-                                                auxiliar_hand = result.data[0]["phonology"][timer_manager.get_index()]["auxiliar_hand"]
-                                                if(auxiliar_hand != None):
-                                    
-                                                    auxiliar_hand["side"] = hand_side
-                                                    auxiliar_hand["motto"] = result.data[0]["motto"]
-                                                    timer_manager.set_save_result_hand(auxiliar_hand)
+                                    if sign_history == []:
+                                        print(f"parametros busca no banco: {CM} / {location} / {trajectory} / {rotation} / {timer_manager.get_index()} / {isDominant}")
+                                        result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, rotation, timer_manager.get_index(), isDominant)    
+                                        print(f"Resultado: {result.data}")
+                                        if len(result) > 0:
+                                            old_word = result.getFirstMotto() # Descobre se houve desistencia do sinal
+                                            validate_if_a_sign_can_finish = result.validate_if_a_sign_can_finish(timer_manager.get_index() + 1)
+                                            
+                                            if validate_if_a_sign_can_finish:
+                                                if len(result) == 1:
+                                                    if(isDominant): # Verifica se é mão direita, usado nos casos onde tem 2 mãos
+                                                        auxiliar_hand = result.data[0]["phonology"][timer_manager.get_index()]["auxiliar_hand"]
+                                                        if(auxiliar_hand != None): # Valida se é sinal de 2 mãos
+                                                            auxiliar_hand["side"] = hand_side
+                                                            auxiliar_hand["motto"] = result.data[0]["motto"]
+                                                            timer_manager.set_save_result_hand(auxiliar_hand)
+                                                        else:
+                                                            timer_manager.set_index(0)
+                                                            word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                            timer_manager.enable()
+                                                            timer_manager.set_save_result_hand({})
+                                                            sign_history = []
+                                                            validate_if_a_sign_can_finish = False
+                                                            threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                                    else: # O sinal está em sua última, na mão não dominante
+                                                        dominant_hand = result.data[0]["phonology"][timer_manager.get_index()]["dominant_hand"]
+                                                        if(dominant_hand != None): # Valida se é sinal de 2 mãos
+                                                            dominant_hand["side"] = hand_side
+                                                            dominant_hand["motto"] = result.data[0]["motto"]
+                                                            timer_manager.set_save_result_hand(dominant_hand)
+                                                        else:
+                                                            timer_manager.set_index(0)
+                                                            word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
+                                                            timer_manager.enable()
+                                                            timer_manager.set_save_result_hand({})
+                                                            sign_history = []
+                                                            validate_if_a_sign_can_finish = False
+                                                            threading.Thread(target=play_word_in_background, args=(word,)).start()
                                                 else:
-                                                    timer_manager.set_index(0)
-                                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                                    timer_manager.enable()
-                                                    timer_manager.set_save_result_hand({})
-                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                                    sign_history = result.data.copy()    
+                                                    params_history.append({"CM" : CM, "trajectory" : "RETO", "sense" : trajectory, "rotation" : rotation, "final_local" : location}) 
                                             else:
-                                                dominant_hand = result.data[0]["phonology"][timer_manager.get_index()]["dominant_hand"]
-                                                if(dominant_hand != None):
-                                                
-                                                    dominant_hand["side"] = hand_side
-                                                    dominant_hand["motto"] = result.data[0]["motto"]
-                                                    timer_manager.set_save_result_hand(dominant_hand)
-                                                else:
-                                                    timer_manager.set_index(0)
-                                                    word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                                    timer_manager.enable()
-                                                    timer_manager.set_save_result_hand({})
-                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()
-                                        else:       
-                                            timer_manager.set_index(timer_manager.get_index() + 1)    
-                                    elif len(result) == 0 and timer_manager.get_index() > 0:
+                                                timer_manager.set_index(timer_manager.get_index() + 1)   
+                                                params_history.append({"CM" : CM, "trajectory" : "RETO", "sense" : trajectory, "rotation" : rotation, "final_local" : location}) 
+                                    elif len(result) == 0 and timer_manager.get_index() > 0: # Valida se houve desistência do sinal
                                         result = repo_sign.getSignByCMAndLocalAndTrajectory(CM,location,trajectory, 0)
                                         if len(result) == 1:
                                             word_retry = result.getFirstMotto()
-                                            if old_word != word_retry:
+                                            if old_word != word_retry: # Valida se a desistência na verda era algum oiutro sinal
                                                 timer_manager.set_index(0)
                                                 if len(result.data[0]["phonology"]) == 1:
                                                     word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
-                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()  
-
-            
+                                                    threading.Thread(target=play_word_in_background, args=(word,)).start()     
+                                    else:
+                                        if 25 < timer_manager.get_timer():
+                                            sign = sign_history[0]
+                                            word = sign["motto"]
+                                            timer_manager.enable()
+                                            sign_history = []
+                                            validate_if_a_sign_can_finish = False
+                                            timer_manager.set_index(0)
+                                            threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                        else:
+                                            resultado = [item for item in sign_history if contem_sequencia(item["phonology"], params_history)]
+                                            if len(resultado) == 1:
+                                                sign = resultado[0]
+                                                word = sign["motto"]
+                                                timer_manager.enable()
+                                                sign_history = []
+                                                validate_if_a_sign_can_finish = False
+                                                timer_manager.set_index(0)
+                                                threading.Thread(target=play_word_in_background, args=(word,)).start()
+                                                
+                                                
+                                                
+                                                
+                                            
                 if timer_manager.get_timer() > 150:
                     timer_manager.reset_timer()
 
@@ -430,7 +466,7 @@ def main():
             timer_manager.increase_blank_timer()
 
         if mode_manager.is_hand_able():
-            debug_image = draw.draw_point_history(debug_image, point_history)
+            # debug_image = draw.draw_point_history(debug_image, point_history)
             debug_image = draw.draw_info(
                 debug_image, fps, mode_manager, timer_manager.get_timer(), word
             )
@@ -445,6 +481,14 @@ def main():
 def play_word_in_background(word, isSpelling = False):
     Talks.play(word, isSpelling)
 
+
+def contem_sequencia(phonology, criterios):
+    dominant_hands = [ph["dominant_hand"] for ph in phonology]
+    
+    for i in range(len(dominant_hands) - len(criterios) + 1):
+        if dominant_hands[i:i+len(criterios)] == criterios:
+            return True
+    return False
 
 def select_mode(key, mode, number, record_on):
     if mode != 1 and mode != 2:
