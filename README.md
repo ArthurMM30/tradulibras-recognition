@@ -87,13 +87,13 @@ Ainda temos as opções de visualização, podemos pressionar a tecla "**B**" al
 - Pressionando B 3 vezes, será possível visualizar os identificadores do corpo.</br>
 - Pressionando B 4 vezes, será possível visualizar os frames de movimento, rotação, timer e FPS.
 
-**Como gravar novas CMs?**</br>
+**Como gravar novas CMs?** </br>
 Para gravas CMs de sinais e soletragem:</br>
 Após abrir o programa, pressione a tecla "**K**".</br>
 Verifique se está na área de sinais ou soletragem, para alterar é preciso apenas pressionar a tecla "**S**"</br>
 Pressione o número desejado para gravar o novo sinal para determinar seu id. E por fim pressione a tecla "**R**" para iniciar a gravação, e pressione novamente para interromper a gravação.
 
-Para treinamento de movimento:</br>
+**Para treinamento de movimento:** </br>
 Após abrir o programa, presssione a tecla "**H**" para abrir o treinamento de movimento como frente, trás, direita, esquerda, etc.</br>
 Pressione "**R**" para iniciar e interromper a gravação.
 </br>
