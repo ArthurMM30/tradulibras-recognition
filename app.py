@@ -371,6 +371,7 @@ def main():
                         sign_history.pop(0)
                         validate_if_a_sign_can_finish = False
 
+                
                 if not mode_manager.is_train_mode():
                     if mode_manager.is_spelling_on():
                         cm = (
@@ -520,10 +521,7 @@ def main():
                                                     timer_manager.set_index(0)
                                                     threading.Thread(target=play_word_in_background, args=(word,)).start()
                                                     
-                                                
-                                                
-                                                
-                                            
+                          
                 if timer_manager.get_timer() > 150:
                     timer_manager.reset_timer()
 
