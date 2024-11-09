@@ -24,7 +24,7 @@ class SignsDescriptionClient():
 
         return SignsDescriptionEntity(data_response)
 
-    def getSignByCMAndLocalAndTrajectory(self, data_request_cm, data_request_local, trajectory, index=0, is_dominant=True):
+    def getSignByCMAndLocalAndTrajectory(self, data_request_cm, data_request_local, trajectory, rotation ,index=0, is_dominant=True):
         data_response = []
         neutro = data_request_local.split(" ")[0] + " NEUTRO"
         
@@ -39,11 +39,23 @@ class SignsDescriptionClient():
         }
         
         trajectory_query = {f"phonology.{str(index)}.{hand}.sense":trajectory} 
+        rotation_query = {
+            "$or": [
+                {f"phonology.{str(index)}.{hand}.rotation": rotation},
+                {f"phonology.{str(index)}.{hand}.rotation": "REPOUSO"}
+            ]
+        }
         
 
-        for sign in self.collection.find({"$and":[cm_query, local_query, trajectory_query]}):
+        for sign in self.collection.find({"$and":[cm_query, local_query, trajectory_query, rotation_query]}):
             data_response.append(sign)
-
+            
+        if(len(data_response) == 0):
+            local_query = {f"phonology.{str(index)}.{hand}.final_local" : "NEUTRO"}
+            for sign in self.collection.find({"$and":[cm_query, local_query, trajectory_query, rotation_query]}):
+                data_response.append(sign)
+                
+        data_response.sort(key=lambda x: len(x["phonology"]))
         return SignsDescriptionEntity(data_response)
     
     def close(self):
@@ -75,6 +87,13 @@ class SignsDescriptionEntity(object):
                 data_response.append(sign)
 
         return SignsDescriptionEntity(data_response)
+    
+    def validate_if_a_sign_can_finish(self, index):
+        print(self.data)
+        for sign in self.data:
+            if len(sign["phonology"]) == index:
+                return True;
+        return False;
 
     def get(self):
         return self.data    
