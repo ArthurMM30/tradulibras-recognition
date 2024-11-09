@@ -1,8 +1,10 @@
-from unidecode import unidecode 
+from unidecode import unidecode
+
+
 class DrawOnCamera:
-    
+
     def __init__(self, cv_module):
-        self.cv = cv_module 
+        self.cv = cv_module
 
     def draw_landmarks(self, image, landmark_point):
         if len(landmark_point) > 0:
@@ -17,7 +19,7 @@ class DrawOnCamera:
                 (255, 255, 255),
                 2,
             )
-            
+
             self.cv.line(
                 image, tuple(landmark_point[3]), tuple(landmark_point[4]), (0, 0, 0), 6
             )
@@ -103,7 +105,11 @@ class DrawOnCamera:
 
             # Ring finger
             self.cv.line(
-                image, tuple(landmark_point[13]), tuple(landmark_point[14]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[13]),
+                tuple(landmark_point[14]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -113,7 +119,11 @@ class DrawOnCamera:
                 2,
             )
             self.cv.line(
-                image, tuple(landmark_point[14]), tuple(landmark_point[15]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[14]),
+                tuple(landmark_point[15]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -123,7 +133,11 @@ class DrawOnCamera:
                 2,
             )
             self.cv.line(
-                image, tuple(landmark_point[15]), tuple(landmark_point[16]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[15]),
+                tuple(landmark_point[16]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -135,7 +149,11 @@ class DrawOnCamera:
 
             # Little finger
             self.cv.line(
-                image, tuple(landmark_point[17]), tuple(landmark_point[18]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[17]),
+                tuple(landmark_point[18]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -145,7 +163,11 @@ class DrawOnCamera:
                 2,
             )
             self.cv.line(
-                image, tuple(landmark_point[18]), tuple(landmark_point[19]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[18]),
+                tuple(landmark_point[19]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -155,7 +177,11 @@ class DrawOnCamera:
                 2,
             )
             self.cv.line(
-                image, tuple(landmark_point[19]), tuple(landmark_point[20]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[19]),
+                tuple(landmark_point[20]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -166,7 +192,9 @@ class DrawOnCamera:
             )
 
             # Palm
-            self.cv.line(image, tuple(landmark_point[0]), tuple(landmark_point[1]), (0, 0, 0), 6)
+            self.cv.line(
+                image, tuple(landmark_point[0]), tuple(landmark_point[1]), (0, 0, 0), 6
+            )
             self.cv.line(
                 image,
                 tuple(landmark_point[0]),
@@ -174,7 +202,9 @@ class DrawOnCamera:
                 (255, 255, 255),
                 2,
             )
-            self.cv.line(image, tuple(landmark_point[1]), tuple(landmark_point[2]), (0, 0, 0), 6)
+            self.cv.line(
+                image, tuple(landmark_point[1]), tuple(landmark_point[2]), (0, 0, 0), 6
+            )
             self.cv.line(
                 image,
                 tuple(landmark_point[1]),
@@ -182,7 +212,9 @@ class DrawOnCamera:
                 (255, 255, 255),
                 2,
             )
-            self.cv.line(image, tuple(landmark_point[2]), tuple(landmark_point[5]), (0, 0, 0), 6)
+            self.cv.line(
+                image, tuple(landmark_point[2]), tuple(landmark_point[5]), (0, 0, 0), 6
+            )
             self.cv.line(
                 image,
                 tuple(landmark_point[2]),
@@ -190,7 +222,9 @@ class DrawOnCamera:
                 (255, 255, 255),
                 2,
             )
-            self.cv.line(image, tuple(landmark_point[5]), tuple(landmark_point[9]), (0, 0, 0), 6)
+            self.cv.line(
+                image, tuple(landmark_point[5]), tuple(landmark_point[9]), (0, 0, 0), 6
+            )
             self.cv.line(
                 image,
                 tuple(landmark_point[5]),
@@ -209,7 +243,11 @@ class DrawOnCamera:
                 2,
             )
             self.cv.line(
-                image, tuple(landmark_point[13]), tuple(landmark_point[17]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[13]),
+                tuple(landmark_point[17]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -245,71 +283,112 @@ class DrawOnCamera:
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (45, 0, 210), -1)
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
             if index == 1:  # Wrist 2
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 2:  # Thumb: base
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 3:  # Thumb: first joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 4:  # Thumb: fingertip
-                self.cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
             if index == 5:  # Index finger: base
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 6:  # Index finger: second joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 7:  # Index finger: first joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 8:  # Index finger: fingertip
-                self.cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
             if index == 9:  # Middle finger: base
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 10:  # Middle finger: second joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 11:  # Middle finger: first joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 12:  # Middle finger: fingertip
-                self.cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
             if index == 13:  # Ring finger: base
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 14:  # Ring finger: second joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 15:  # Ring finger: first joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 16:  # Ring finger: fingertip
-                self.cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
             if index == 17:  # Little finger: base
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 18:  # Little finger: second joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 19:  # Little finger: first joint
-                self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
             if index == 20:  # Little finger: fingertip
-                self.cv.circle(image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1)
+                self.cv.circle(
+                    image, (landmark[0], landmark[1]), 7, (255, 255, 255), -1
+                )
                 self.cv.circle(image, (landmark[0], landmark[1]), 7, (0, 0, 0), 1)
 
         return image
 
-
     def draw_bounding_rect(self, image, brect):
-        self.cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]), (0, 0, 0), 1)
+        self.cv.rectangle(
+            image, (brect[0], brect[1]), (brect[2], brect[3]), (0, 0, 0), 1
+        )
 
         return image
 
@@ -317,11 +396,15 @@ class DrawOnCamera:
     def draw_info_text(self, image, brect, hand_side, finger_gesture_text, rotation_gesture_text, probability_rank, mode_manager):
         image_width = image.shape[1]
 
-        self.cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22), (0, 0, 0), -1)
+        self.cv.rectangle(
+            image, (brect[0], brect[1]), (brect[2], brect[1] - 22), (0, 0, 0), -1
+        )
 
         info_text = hand_side
         if probability_rank[0][0] != None:
-            info_text = f"{info_text}: {probability_rank[0][0]} - {probability_rank[0][1]}" 
+            info_text = (
+                f"{info_text}: {probability_rank[0][0]} - {probability_rank[0][1]}"
+            )
         self.cv.putText(
             image,
             info_text,
@@ -565,7 +648,6 @@ class DrawOnCamera:
                 self.cv.LINE_AA,
             )
 
-
             self.cv.putText(
                 image,
                 "K:" + str(mode_manager.get_train_index()),
@@ -636,7 +718,7 @@ class DrawOnCamera:
     def draw_word(self, image, word):
         image_width, image_height = image.shape[1], image.shape[0]
 
-        draw_word = unidecode(word) 
+        draw_word = unidecode(word)
         self.cv.putText(
             image,
             draw_word,
@@ -660,66 +742,137 @@ class DrawOnCamera:
 
         return image
 
-
-    def draw_pose_landmarks(self,image, landmark_point, landmark_wrist, location, hand_side):
-        self.cv.line(image, tuple(landmark_point[0]), tuple(landmark_point[1]), (0, 0, 0), 6)
+    def draw_pose_landmarks(
+        self, image, landmark_point, landmark_wrist, location, hand_side
+    ):
         self.cv.line(
-            image, tuple(landmark_point[0]), tuple(landmark_point[1]), (255, 255, 255), 2
+            image, tuple(landmark_point[0]), tuple(landmark_point[1]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[0]),
+            tuple(landmark_point[1]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[0]), tuple(landmark_point[2]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[0]), tuple(landmark_point[2]), (255, 255, 255), 2
+            image, tuple(landmark_point[0]), tuple(landmark_point[2]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[0]),
+            tuple(landmark_point[2]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[1]), tuple(landmark_point[3]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[1]), tuple(landmark_point[3]), (255, 255, 255), 2
+            image, tuple(landmark_point[1]), tuple(landmark_point[3]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[1]),
+            tuple(landmark_point[3]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[2]), tuple(landmark_point[3]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[2]), tuple(landmark_point[3]), (255, 255, 255), 2
+            image, tuple(landmark_point[2]), tuple(landmark_point[3]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[2]),
+            tuple(landmark_point[3]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[2]), tuple(landmark_point[4]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[2]), tuple(landmark_point[4]), (255, 255, 255), 2
+            image, tuple(landmark_point[2]), tuple(landmark_point[4]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[2]),
+            tuple(landmark_point[4]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[3]), tuple(landmark_point[5]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[3]), tuple(landmark_point[5]), (255, 255, 255), 2
+            image, tuple(landmark_point[3]), tuple(landmark_point[5]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[3]),
+            tuple(landmark_point[5]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[4]), tuple(landmark_point[5]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[4]), tuple(landmark_point[5]), (255, 255, 255), 2
+            image, tuple(landmark_point[4]), tuple(landmark_point[5]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[4]),
+            tuple(landmark_point[5]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[4]), tuple(landmark_point[6]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[4]), tuple(landmark_point[6]), (255, 255, 255), 2
+            image, tuple(landmark_point[4]), tuple(landmark_point[6]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[4]),
+            tuple(landmark_point[6]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[4]), tuple(landmark_point[8]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[4]), tuple(landmark_point[8]), (255, 255, 255), 2
+            image, tuple(landmark_point[4]), tuple(landmark_point[8]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[4]),
+            tuple(landmark_point[8]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[5]), tuple(landmark_point[7]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[5]), tuple(landmark_point[7]), (255, 255, 255), 2
+            image, tuple(landmark_point[5]), tuple(landmark_point[7]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[5]),
+            tuple(landmark_point[7]),
+            (255, 255, 255),
+            2,
         )
 
-        self.cv.line(image, tuple(landmark_point[5]), tuple(landmark_point[9]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[5]), tuple(landmark_point[9]), (255, 255, 255), 2
+            image, tuple(landmark_point[5]), tuple(landmark_point[9]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[5]),
+            tuple(landmark_point[9]),
+            (255, 255, 255),
+            2,
         )
 
         if landmark_wrist["R"] != None:
             self.cv.line(
-                image, tuple(landmark_point[6]), tuple(landmark_wrist["R"]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[6]),
+                tuple(landmark_wrist["R"]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -731,7 +884,11 @@ class DrawOnCamera:
 
         if landmark_wrist["L"] != None:
             self.cv.line(
-                image, tuple(landmark_point[7]), tuple(landmark_wrist["L"]), (0, 0, 0), 6
+                image,
+                tuple(landmark_point[7]),
+                tuple(landmark_wrist["L"]),
+                (0, 0, 0),
+                6,
             )
             self.cv.line(
                 image,
@@ -741,9 +898,15 @@ class DrawOnCamera:
                 2,
             )
 
-        self.cv.line(image, tuple(landmark_point[8]), tuple(landmark_point[9]), (0, 0, 0), 6)
         self.cv.line(
-            image, tuple(landmark_point[8]), tuple(landmark_point[9]), (255, 255, 255), 2
+            image, tuple(landmark_point[8]), tuple(landmark_point[9]), (0, 0, 0), 6
+        )
+        self.cv.line(
+            image,
+            tuple(landmark_point[8]),
+            tuple(landmark_point[9]),
+            (255, 255, 255),
+            2,
         )
 
         self.cv.line(
@@ -757,13 +920,13 @@ class DrawOnCamera:
         self.cv.line(
             image, tuple(landmark_point[13]), tuple(landmark_point[14]), (45, 0, 210), 2
         )
-        
+
         (landmark_point)
-        
+
         self.cv.line(
             image, tuple(landmark_point[15]), tuple(landmark_point[16]), (45, 0, 210), 2
         )
-        
+
         for landmark in landmark_point[:10]:
             self.cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             self.cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)

@@ -37,7 +37,7 @@ def get_args():
         "--min_detection_confidence",
         help="min_detection_confidence",
         type=float,
-        default=0.7,
+        default=0.8,
     )
     parser.add_argument(
         "--min_tracking_confidence",
@@ -79,7 +79,6 @@ def main():
 
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
-
     args = get_args()
 
     cap_device = args.device
@@ -115,16 +114,22 @@ def main():
 
     # Read labels ###########################################################
     with open(
-        "model/sign_keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
+        "model/sign_keypoint_classifier/keypoint_classifier_label.csv",
+        encoding="utf-8-sig",
     ) as f:
         sign_keypoint_classifier_labels = csv.reader(f)
-        sign_keypoint_classifier_labels = [row[0] for row in sign_keypoint_classifier_labels]
+        sign_keypoint_classifier_labels = [
+            row[0] for row in sign_keypoint_classifier_labels
+        ]
 
     with open(
-        "model/spelling_keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
+        "model/spelling_keypoint_classifier/keypoint_classifier_label.csv",
+        encoding="utf-8-sig",
     ) as f:
         spelling_keypoint_classifier_labels = csv.reader(f)
-        spelling_keypoint_classifier_labels = [row[0] for row in spelling_keypoint_classifier_labels]
+        spelling_keypoint_classifier_labels = [
+            row[0] for row in spelling_keypoint_classifier_labels
+        ]
 
     with open(
         "model/point_history_classifier/point_history_classifier_label.csv",
@@ -143,8 +148,6 @@ def main():
         rotation_history_classifier_labels = [
             row[0] for row in rotation_history_classifier_labels
         ]
-
-
 
     history_length = 16
     point_history = {
@@ -185,13 +188,15 @@ def main():
         if key == 27:  # ESC
             break
 
-        received_command = mode_manager.alter_mode_by_key(key) 
+        received_command = mode_manager.alter_mode_by_key(key)
         if received_command == "s":
             if not mode_manager.is_spelling_on() and word != "":
-                threading.Thread(target=play_word_in_background, args=(word.lower(), True)).start()
+                threading.Thread(
+                    target=play_word_in_background, args=(word.lower(), True)
+                ).start()
             timer_manager.reset_timer()
             word = ""
-            
+
         ret, image = cap.read()
         if not ret:
             break
@@ -214,14 +219,19 @@ def main():
         wrist_hand_points = {"L": None, "R": None}
         if pose_results.pose_landmarks is not None:
             pose_landmarks = pose_results.pose_landmarks
-            pose_landmark_list = calcs.calc_pose_landmark_list(debug_image, pose_landmarks)
+            pose_landmark_list = calcs.calc_pose_landmark_list(
+                debug_image, pose_landmarks
+            )
             pose_landmark_list = calcs.calc_new_pose_landmarks(pose_landmark_list)
 
         # print(pose_results.pose_landmarks)
         # print("a")
         # print(hand_results.multi_hand_landmarks)
         #  ####################################################################
-        if hand_results.multi_hand_landmarks is not None and pose_results.pose_landmarks is not None:
+        if (
+            hand_results.multi_hand_landmarks is not None
+            and pose_results.pose_landmarks is not None
+        ):
             for hand_landmarks, handedness in zip(
                 hand_results.multi_hand_landmarks, hand_results.multi_handedness
             ):
@@ -236,29 +246,35 @@ def main():
                 pre_processed_point_history_list[hand_side] = pre_process_point_history(
                     debug_image, point_history[hand_side]
                 )
-                pre_processed_rotation_history_list[hand_side] = pre_process_rotation_history(
-                    debug_image, rotation_history[hand_side]
-                ) 
-                
+                pre_processed_rotation_history_list[hand_side] = (
+                    pre_process_rotation_history(
+                        debug_image, rotation_history[hand_side]
+                    )
+                )
+
                 # Write to the dataset file ####################################################################
                 logging_csv(
                     mode_manager,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list[hand_side],
                     pre_processed_rotation_history_list[hand_side],
-                    received_command
+                    received_command,
                 )
 
                 if mode_manager.is_spelling_on():
                     # Hand sign classification
-                    sign_percantage = spelling_keypoint_classifier(pre_processed_landmark_list)
+                    sign_percantage = spelling_keypoint_classifier(
+                        pre_processed_landmark_list
+                    )
 
                     # Getting the top 3 more probable signs
                     probability_rank = ranking_sign_probability(
                         spelling_keypoint_classifier_labels, list(sign_percantage)
                     )
                 else:
-                    sign_percantage = sign_keypoint_classifier(pre_processed_landmark_list)
+                    sign_percantage = sign_keypoint_classifier(
+                        pre_processed_landmark_list
+                    )
 
                     probability_rank = ranking_sign_probability(
                         sign_keypoint_classifier_labels, list(sign_percantage)
@@ -331,9 +347,11 @@ def main():
                         brect,
                         hand_side,
                         point_history_classifier_labels[most_common_fg_id[0][0]],
-                        rotation_history_classifier_labels[most_common_rotation_id[0][0]],
+                        rotation_history_classifier_labels[
+                            most_common_rotation_id[0][0]
+                        ],
                         probability_rank,
-                        mode_manager
+                        mode_manager,
                     )
 
                 if mode_manager.is_body_able():
@@ -355,35 +373,58 @@ def main():
 
                 if not mode_manager.is_train_mode():
                     if mode_manager.is_spelling_on():
-                        cm = probability_rank[0][0] if float(probability_rank[0][1]) > hand_fidelity else "null"
+                        cm = (
+                            probability_rank[0][0]
+                            if float(probability_rank[0][1]) > hand_fidelity
+                            else "null"
+                        )
                         if 12 < timer_manager.get_timer() and timer_manager.is_able():
                             result = repo_letter.getLetterByCM(cm)
                             if len(result) == 1:
-                                if result.validateSense("REPOUSO",0):
+                                if result.validateSense("REPOUSO", 0):
                                     word += result.getFirstLetter()
                                     timer_manager.enable()
                                 else:
                                     for trajectory_index in most_common_fg_id:
-                                        trajectory = point_history_classifier_labels[trajectory_index[0]]
-                                        result_validation = result.validateSense(trajectory, timer_manager.get_spelling_index())
+                                        trajectory = point_history_classifier_labels[
+                                            trajectory_index[0]
+                                        ]
+                                        result_validation = result.validateSense(
+                                            trajectory,
+                                            timer_manager.get_spelling_index(),
+                                        )
                                         if result_validation:
 
-                                            if len(result.data[0]["sense"]) == timer_manager.get_spelling_index()+1:
+                                            if (
+                                                len(result.data[0]["sense"])
+                                                == timer_manager.get_spelling_index()
+                                                + 1
+                                            ):
                                                 word += result.getFirstLetter()
                                                 timer_manager.enable()
                                                 timer_manager.set_spelling_index(0)
 
                                             else:
-                                                timer_manager.set_spelling_index(timer_manager.get_spelling_index() + 1)
+                                                timer_manager.set_spelling_index(
+                                                    timer_manager.get_spelling_index()
+                                                    + 1
+                                                )
 
-                                        elif not result_validation and timer_manager.get_spelling_index() > 0:
-                                            if result.validateSense("REPOUSO",0):
+                                        elif (
+                                            not result_validation
+                                            and timer_manager.get_spelling_index() > 0
+                                        ):
+                                            if result.validateSense("REPOUSO", 0):
                                                 word += result.getFirstLetter()
                                                 timer_manager.enable()
                                                 timer_manager.set_spelling_index(0)
                             elif len(result) == 2:
                                 if result.validate_if_have_rotation():
-                                    result = result.filter_by_sense(rotation_history_classifier_labels[most_common_rotation_id[0][0]])
+                                    result = result.filter_by_sense(
+                                        rotation_history_classifier_labels[
+                                            most_common_rotation_id[0][0]
+                                        ]
+                                    )
                                     if len(result) > 0:
                                         word += result.getFirstLetter()
                                         timer_manager.enable()
@@ -511,20 +552,23 @@ def main():
             timer_manager.increase_blank_timer()
 
         if mode_manager.is_hand_able():
-            debug_image = draw.draw_point_history(debug_image, point_history, mode_manager)
+            debug_image = draw.draw_point_history(
+                debug_image, point_history, mode_manager
+            )
             debug_image = draw.draw_info(
                 debug_image, fps, mode_manager, timer_manager.get_timer()
             )
         debug_image = draw.draw_word(debug_image, word)
 
         # Screen reflection #############################################################
-        cv.namedWindow('Hand Gesture Recognition', cv.WINDOW_NORMAL)
+        cv.namedWindow("Hand Gesture Recognition", cv.WINDOW_NORMAL)
         cv.imshow("Hand Gesture Recognition", debug_image)
 
     cap.release()
     cv.destroyAllWindows()
 
-def play_word_in_background(word, isSpelling = False):
+
+def play_word_in_background(word, isSpelling=False):
     Talks.play(word, isSpelling)
 
 
@@ -563,14 +607,13 @@ def select_mode(key, mode, number, record_on):
     return number, mode, record_on
 
 
-
 def identify_hand_area(point, hand_side, pose_landmark):
     location = ""
     if (
-        (pose_landmark[1][0] < point[0] < pose_landmark[0][0]
-        and pose_landmark[0][1] < point[1] < pose_landmark[10][1]) 
+        pose_landmark[1][0] < point[0] < pose_landmark[0][0]
+        and pose_landmark[0][1] < point[1] < pose_landmark[10][1]
     ):
-        location = "TESTA"  
+        location = "TESTA"
 
     elif (
         pose_landmark[1][0] < point[0] < pose_landmark[0][0]
@@ -592,7 +635,7 @@ def identify_hand_area(point, hand_side, pose_landmark):
         pose_landmark[5][0] < point[0] < pose_landmark[4][0]
         and pose_landmark[4][1] < point[1] < pose_landmark[8][1]
     ):
-        
+
         side = "L" if point[0] < pose_landmark[13][0] else "R"
         location = "IPSILATERAL" if side == hand_side else "CONTRALATERAL"
 
@@ -600,11 +643,12 @@ def identify_hand_area(point, hand_side, pose_landmark):
             location = "BARRIGA " + location
         else:
             location = "PEITORAL " + location
-        
+
     else:
         location = "NEUTRO"
 
     return location
+
 
 def ranking_sign_probability(hand_sign_list, percentage_list):
     atribuition_list = dict(zip(hand_sign_list, percentage_list))
@@ -673,6 +717,7 @@ def pre_process_point_history(image, point_history):
 
     return temp_point_history
 
+
 def pre_process_rotation_history(image, rotation_history):
     image_height = image.shape[0]
 
@@ -700,11 +745,21 @@ def pre_process_rotation_history(image, rotation_history):
 cm_list = []
 mov_list = []
 rot_list = []
-def logging_csv(mode_manager, landmark_list, point_history_list, rotation_history_list, received_command):
+
+
+def logging_csv(
+    mode_manager,
+    landmark_list,
+    point_history_list,
+    rotation_history_list,
+    received_command,
+):
     global cm_list
     global mov_list
     global rot_list
-    mode, train_index = mode_manager.get_current_train_mode(received_command) #(Nothing, CM, Movement, Rotation)
+    mode, train_index = mode_manager.get_current_train_mode(
+        received_command
+    )  # (Nothing, CM, Movement, Rotation)
 
     if mode == 1:
         if mode_manager.is_spelling_on():
@@ -750,7 +805,6 @@ def logging_csv(mode_manager, landmark_list, point_history_list, rotation_histor
                 writer.writerow([train_index, *rotation_history_list])
             rot_list = []
     return
-
 
 
 if __name__ == "__main__":
