@@ -26,7 +26,9 @@ class Talks:
             time.sleep(0.1) 
             pygame.mixer.music.load(word_path)
             pygame.mixer.music.play()
-            # playsound(word_path)
-            # subprocess.run(['start', '/wait', word_path], shell=True)
 
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.1)
+        
+        pygame.mixer.music.unload()
         

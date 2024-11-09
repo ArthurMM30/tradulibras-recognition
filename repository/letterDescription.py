@@ -24,18 +24,27 @@ class LetterDescriptionEntity(object):
     def __init__(self, data):
         self.data = data
 
+    def validate_if_have_rotation(self, data_index=0):
+        for data in self.data:
+            if data["sense"][data_index] in ("FLEXAO", "ROTACAO"):
+                return True
 
-    def filterLetterBySense(self, data_request):
+        return False
+    
+    def validateSense(self, sense, index, data_index=0):
+        return self.data[data_index]["sense"][index] == sense
+
+    def filter_by_sense(self, sense):
         data_response = []
 
-        for sign in self.data:
-            if sign["sense"] == data_request:
-                data_response.append(sign)
+        for letter in self.data:
+            if letter["sense"][0] == sense:
+                data_response.append(letter)
 
         return LetterDescriptionEntity(data_response)
 
     def get(self):
-        return self.data    
+        return self.data 
 
     def getFirstLetter(self):
         return self.data[0]["motto"] 
