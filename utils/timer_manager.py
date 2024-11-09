@@ -8,8 +8,7 @@ class TimerManager:
         self.able = True
         self.index = 0
         self.save_result_hand = {}
-
-    # def check_if_CM_updated(self, CM):
+        self.spelling_index = 0
 
     def check_if_movement_updated(self, movement):
         if self.last_movement != movement:
@@ -40,6 +39,9 @@ class TimerManager:
     
     def get_index(self):
         return self.index
+    
+    def get_spelling_index(self):
+        return self.spelling_index
 
 
     def increase_timer(self):
@@ -53,8 +55,6 @@ class TimerManager:
         self.blank_timer = 0
         self.able = True
 
-        # self.last_movement = ""
-
     def set_save_result_hand(self, save_result_hand):
         self.save_result_hand = save_result_hand
         
@@ -66,3 +66,6 @@ class TimerManager:
     
     def set_index(self, index):
         self.index = index
+
+    def set_spelling_index(self, spelling_index):
+        self.spelling_index = spelling_index

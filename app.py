@@ -166,12 +166,11 @@ def main():
 
     rotation_gesture_history = {
         "L": deque(maxlen=history_length // 4),
-        "R": deque(maxlen=history_length // 4
-                   ),
+        "R": deque(maxlen=history_length // 4),
     }
 
     word = ""
-    hand_fidelity = 50.0
+    hand_fidelity = 20.0
 
     while True:
         fps = cvFpsCalc.get()
