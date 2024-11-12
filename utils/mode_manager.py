@@ -6,8 +6,11 @@ class ModeManager:
         self.record_on = False 
         self.english_on = False
         self.spelling_on = False
+        self.timer_limit = 10
+        self.is_t_on = False
     
     def alter_mode_by_key(self, key):
+        if key != -1: print(key)
         if ord("0") <= key <= ord("9"): # Number pictor to training
             if self.train_index > 9:
                 self.train_index = key - 48
@@ -30,6 +33,12 @@ class ModeManager:
         if key == ord("s"):     # Spelling Toggle
             self.spelling_on = not self.spelling_on
             return "s"
+        if key == ord("."):
+            self.timer_limit += 1
+        if key == ord(","):
+            self.timer_limit -= 1
+        if key == ord("t"):
+            self.is_t_on = not self.is_t_on
         return False
         
 
@@ -52,6 +61,9 @@ class ModeManager:
         
 
         return self.mode, self.train_index 
+    
+    def get_timer_limit(self):
+        return self.timer_limit
 
 
     # View Options
@@ -67,6 +79,9 @@ class ModeManager:
 
     def is_dev_mode(self):
         return self.view_mode == 3
+    
+    def is_t_able(self):
+        return self.is_t_on
 
 
     # Language options
