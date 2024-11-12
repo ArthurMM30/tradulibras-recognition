@@ -10,7 +10,8 @@ import csv
 
 def print_confusion_matrix(y_true, y_pred, report=True):
     with open(
-        "model/keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
+        "model/spelling_keypoint_classifier/spelling_classifier_label.csv",
+        encoding="utf-8-sig",
     ) as f:
         keypoint_classifier_labels = csv.reader(f)
         keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
@@ -27,8 +28,8 @@ def print_confusion_matrix(y_true, y_pred, report=True):
 
 
 RANDOM_SEED = 0
-dataset = "model/keypoint_classifier/keypoint.csv"
-model_save_path = "model/keypoint_classifier/keypoint_classifier.keras"
+dataset = "model/spelling_keypoint_classifier/keypoint.csv"
+model_save_path = "model/spelling_keypoint_classifier/keypoint_classifier.keras"
 NUM_CLASSES = 40
 max_accuracy = 0
 num_iterations = 500
