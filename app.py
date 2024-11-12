@@ -323,6 +323,9 @@ def main():
                         finger_gesture_history[hand_side]
                     ).most_common()
                 else:
+                    # most_common_fg_id = Counter(
+                    #     finger_gesture_history[hand_side]
+                    # ).most_common()
                     most_common_fg_id = [[finger_gesture_history[hand_side][-1]]]
 
                 rotation_gesture_history[hand_side].append(rotation_gesture_id)
@@ -379,11 +382,14 @@ def main():
                             if float(probability_rank[0][1]) > hand_fidelity
                             else "null"
                         )
-                        if 12 < timer_manager.get_timer() and timer_manager.is_able():
+                        if mode_manager.get_timer_limit() < timer_manager.get_timer() and timer_manager.is_able():
                             result = repo_letter.getLetterByCM(cm)
                             if len(result) == 1:
                                 if result.validateSense("REPOUSO", 0):
-                                    word += result.getFirstLetter()
+                                    if result.getFirstLetter() == "F" and mode_manager.is_t_able():
+                                        word += "T"
+                                    else:
+                                        word += result.getFirstLetter()
                                     timer_manager.enable()
                                 else:
                                     for trajectory_index in most_common_fg_id:
@@ -432,7 +438,7 @@ def main():
                                         timer_manager.set_spelling_index(0)
                     else:
                         #SEMITIR AINDA QUE A MÃO NÃO ESTEJA EXPOSTA                    
-                        if 7 < timer_manager.get_timer() and timer_manager.is_able():
+                        if mode_manager.get_timer_limit() < timer_manager.get_timer() and timer_manager.is_able():
                             CM = probability_rank[0][0]
                     
                             for trajectory_index in most_common_fg_id:
@@ -502,7 +508,7 @@ def main():
                                                             word = result.getFirstMotto() if not mode_manager.is_english_on() else result.getFirstMottoEn()
                                                             threading.Thread(target=play_word_in_background, args=(word,)).start()     
                                         else:
-                                            if 25 < timer_manager.get_timer():
+                                            if 20 < timer_manager.get_timer():
                                                 sign = sign_history[0]
                                                 word = sign["motto"]
                                                 timer_manager.enable()
@@ -546,7 +552,7 @@ def main():
                 debug_image, point_history, mode_manager
             )
             debug_image = draw.draw_info(
-                debug_image, fps, mode_manager, timer_manager.get_timer()
+                debug_image, fps, mode_manager, timer_manager.get_timer(), mode_manager.get_timer_limit()
             )
         debug_image = draw.draw_word(debug_image, word)
 
@@ -569,32 +575,6 @@ def contem_sequencia(phonology, criterios):
         if dominant_hands[i:i+len(criterios)] == criterios:
             return True
     return False
-
-def select_mode(key, mode, number, record_on):
-    if mode != 1 and mode != 2:
-        number = ""
-    if ord("0") <= key <= ord("9"):
-        if len(number) == 1:
-            number = str(key - 48)
-        else:
-            number = number + str(key - 48)
-    if key == ord("n"):
-        mode = 0
-    if key == ord("k"):  # CM configuration mode
-        mode = 1
-    if key == ord("h"):
-        mode = 2
-    if key == ord("r"):
-        record_on = not record_on
-    if key == ord("b"):  # to view the body
-        mode = 3
-    if key == ord("p"):
-        mode = 4
-    if key == ord("e"):
-        mode = 5
-    if key == ord("x"):
-        mode = 6
-    return number, mode, record_on
 
 
 def identify_hand_area(point, hand_side, pose_landmark):

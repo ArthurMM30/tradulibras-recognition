@@ -576,7 +576,7 @@ class DrawOnCamera:
         return image
 
 
-    def draw_info(self,image, fps, mode_manager, timer):
+    def draw_info(self,image, fps, mode_manager, timer, timer_limit):
         image_width, image_height = image.shape[1], image.shape[0]
 
         if mode_manager.is_dev_mode():
@@ -603,20 +603,20 @@ class DrawOnCamera:
 
             self.cv.putText(
                 image,
-                "TIMER:" + str(timer),
-                (10, image_height - 25),
+                f"TIMER: {timer}/{timer_limit}",
+                (10, image_height - 15),
                 self.cv.FONT_HERSHEY_SIMPLEX,
-                1.0,
+                0.7,
                 (0, 0, 0),
-                4,
+                3,
                 self.cv.LINE_AA,
             )
             self.cv.putText(
                 image,
-                "TIMER:" + str(timer),
-                (10, image_height - 25),
+                f"TIMER: {timer}/{timer_limit}",
+                (10, image_height - 15),
                 self.cv.FONT_HERSHEY_SIMPLEX,
-                1.0,
+                0.7,
                 (255, 255, 255),
                 2,
                 self.cv.LINE_AA,
@@ -673,7 +673,7 @@ class DrawOnCamera:
             if mode_manager.is_spelling_on():
                 self.cv.putText(
                     image,
-                    "SPELLING MODE",
+                    "SPELLING MODE." if mode_manager.is_t_able() else "SPELLING MODE",
                     (image.shape[1] - 200, image_height - 20),
                     self.cv.FONT_HERSHEY_SIMPLEX,
                     0.6,
@@ -683,7 +683,7 @@ class DrawOnCamera:
                 )
                 self.cv.putText(
                     image,
-                    "SPELLING MODE",
+                    "SPELLING MODE." if mode_manager.is_t_able() else "SPELLING MODE",
                     (image.shape[1] - 200, image_height - 20),
                     self.cv.FONT_HERSHEY_SIMPLEX,
                     0.6,
@@ -949,7 +949,7 @@ class DrawOnCamera:
                 (10, 30),
                 self.cv.FONT_HERSHEY_SIMPLEX,
                 1.0,
-                (152, 251, 152),
+                (251, 152, 152),
                 2,
                 self.cv.LINE_AA,
             )
